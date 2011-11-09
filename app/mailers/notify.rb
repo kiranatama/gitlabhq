@@ -1,6 +1,6 @@
 class Notify < ActionMailer::Base
-  default_url_options[:host] = "gitlabhq.com"
-  default from: "notify@gitlabhq.com"
+  default_url_options[:host] = "kiranatama.com"
+  default from: "karuna@kiranatama.com"
 
   def new_user_email(user, password)
     @user = user
