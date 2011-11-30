@@ -9,7 +9,7 @@ class Repository
     @project = project
   end
 
-  def path 
+  def path
     @path ||= project.path
   end
 
@@ -22,7 +22,11 @@ class Repository
   end
 
   def url_to_repo
-    "#{GITOSIS["git_user"]}@#{GITOSIS["host"]}:#{path}.git"
+    if !GITOSIS["port"] or GITOSIS["port"] == 22
+      "#{GITOSIS["git_user"]}@#{GITOSIS["host"]}:#{path}.git"
+    else
+      "ssh://#{GITOSIS["git_user"]}@#{GITOSIS["host"]}:#{GITOSIS["port"]}/#{path}.git"
+    end
   end
 
   def path_to_repo
@@ -60,16 +64,17 @@ class Repository
   end
 
   def commit(commit_id = nil)
-    if commit_id
-      repo.commits(commit_id).first
-    else
-      repo.commits.first
-    end
+    commit = if commit_id
+               repo.commits(commit_id).first
+             else
+               repo.commits.first
+             end
+    Commit.new(commit) if commit
   end
 
   def fresh_commits(n = 10)
     commits = heads.map do |h|
-      repo.commits(h.name, n)
+      repo.commits(h.name, n).map { |c| Commit.new(c, h) }
     end.flatten.uniq { |c| c.id }
 
     commits.sort! do |x, y|
@@ -81,7 +86,7 @@ class Repository
 
   def commits_since(date)
     commits = heads.map do |h|
-      repo.log(h.name, nil, :since => date)
+      repo.log(h.name, nil, :since => date).each { |c| Commit.new(c, h) }
     end.flatten.uniq { |c| c.id }
 
     commits.sort! do |x, y|
@@ -89,5 +94,15 @@ class Repository
     end
 
     commits
+  end
+
+  def commits(ref, path = nil, limit = nil, offset = nil)
+    if path
+      repo.log(ref, path, :max_count => limit, :skip => offset)
+    elsif limit && offset
+      repo.commits(ref, limit, offset)
+    else
+      repo.commits(ref)
+    end.map{ |c| Commit.new(c) } 
   end
 end

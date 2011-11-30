@@ -9,7 +9,7 @@ class IssuesController < ApplicationController
   before_filter :authorize_read_issue!
   before_filter :authorize_write_issue!, :only => [:new, :create, :close, :edit, :update, :sort]
 
-  respond_to :js
+  respond_to :js, :html
 
   def index
     @issues = case params[:f].to_i
@@ -19,9 +19,12 @@ class IssuesController < ApplicationController
               else @project.issues.opened
               end
 
+    @issues = @issues.includes(:author, :project)
+
     respond_to do |format|
       format.html # index.html.erb
       format.js
+      format.atom { render :layout => false }
     end
   end
 
@@ -35,10 +38,17 @@ class IssuesController < ApplicationController
   end
 
   def show
-    @notes = @issue.notes.order("created_at DESC").limit(20)
+    @notes = @issue.notes.inc_author.order("created_at DESC").limit(20)
     @note = @project.notes.new(:noteable => @issue)
 
-    respond_to do |format| 
+    @commits = if @issue.branch_name && @project.repo.heads.map(&:name).include?(@issue.branch_name)
+                 @project.repo.commits_between("master", @issue.branch_name)
+               else 
+                 []
+               end
+
+
+    respond_to do |format|
       format.html
       format.js { respond_with_notes }
     end
@@ -95,7 +105,7 @@ class IssuesController < ApplicationController
                   else @project.issues.opened
                 end
 
-    @issues = @issues.where("title LIKE ? OR content LIKE ?", "%#{terms}%", "%#{terms}%") unless terms.blank?
+    @issues = @issues.where("title LIKE ?", "%#{terms}%") unless terms.blank?
 
     render :partial => 'issues'
   end

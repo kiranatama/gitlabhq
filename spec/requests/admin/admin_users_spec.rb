@@ -57,13 +57,13 @@ describe "Admin::Users" do
   describe "GET /admin/users/:id" do
     before do
       visit admin_users_path
-      click_link "Show"
+      click_link "#{@user.name}"
     end
 
     it "should have user info" do
       page.should have_content(@user.email)
       page.should have_content(@user.name)
-      page.should have_content(@user.is_admin?)
+      page.should have_content(@user.projects_limit)
     end
   end
 

@@ -11,7 +11,6 @@ describe "Profile" do
     end
 
     it { page.should have_content(@user.name) }
-    it { page.should have_content(@user.email) }
   end
 
   describe "Profile update" do
@@ -27,6 +26,19 @@ describe "Profile" do
     it { @user.skype.should == 'testskype' }
     it { @user.linkedin.should == 'testlinkedin' }
     it { @user.twitter.should == 'testtwitter' }
+  end
+
+  describe "Reset private token" do
+    before do
+      visit profile_password_path
+    end
+
+    it "should reset private token" do
+      user_first_token = @user.private_token
+      click_button "Reset"
+      @user.reload
+      @user.private_token.should_not == user_first_token
+    end
   end
 
   describe "Password update" do

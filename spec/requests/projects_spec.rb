@@ -5,6 +5,8 @@ describe "Projects" do
 
   describe "GET /projects" do
     before do
+      @project = Factory :project
+      @project.add_access(@user, :read)
       visit projects_path
     end
 
@@ -14,6 +16,10 @@ describe "Projects" do
 
     it "should have link to new project" do
       page.should have_content("Create new project")
+    end
+
+    it "should have project" do 
+      page.should have_content(@project.name)
     end
   end
 
@@ -72,10 +78,13 @@ describe "Projects" do
       current_path.should == project_path(@project)
     end
 
-    it "should beahave like dashboard" do
-      page.should have_content("History")
+    it "should beahave like activities page" do
+      within ".project-update"  do
+        page.should have_content("master")
+        page.should have_content(@project.commit.author.name)
+        page.should have_content(@project.commit.safe_message)
+      end
     end
-
   end
 
   describe "GET /projects/team" do

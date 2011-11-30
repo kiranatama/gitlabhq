@@ -1,9 +1,6 @@
 class ApplicationController < ActionController::Base
   before_filter :authenticate_user!
-  before_filter :view_style
-
   protect_from_forgery
-
   helper_method :abilities, :can?
 
   rescue_from Gitosis::AccessDenied do |exception|
@@ -76,29 +73,21 @@ class ApplicationController < ActionController::Base
     redirect_to @project unless @project.repo_exists?
   end
 
-  def view_style
-    if params[:view_style] == "collapsed"
-      cookies[:view_style] = "collapsed" 
-    elsif params[:view_style] == "fluid"
-      cookies[:view_style] = "" 
-    end
-
-    @view_mode = if cookies[:view_style] == "collapsed"
-                   :fixed
-                 else
-                   :fluid
-                 end
-  end
-
   def respond_with_notes
     if params[:last_id] && params[:first_id]
       @notes = @notes.where("id >= ?", params[:first_id])
     elsif params[:last_id]
       @notes = @notes.where("id > ?", params[:last_id])
     elsif params[:first_id]
-      @notes = @notes.where("id < ?", params[:first_id]) 
-    else 
+      @notes = @notes.where("id < ?", params[:first_id])
+    else
       nil
     end
+  end
+
+  def no_cache_headers
+    response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "Fri, 01 Jan 1990 00:00:00 GMT"
   end
 end

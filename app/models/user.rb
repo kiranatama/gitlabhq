@@ -1,7 +1,7 @@
 class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :token_authenticatable, :encryptable, :confirmable, :lockable, :timeoutable and :omniauthable
-  devise :database_authenticatable,
+  devise :database_authenticatable, :token_authenticatable,
          :recoverable, :rememberable, :trackable, :validatable
 
   # Setup accessible (or protected) attributes for your model
@@ -25,10 +25,12 @@ class User < ActiveRecord::Base
     :foreign_key => :assignee_id,
     :dependent => :destroy
 
+  before_create :ensure_authentication_token
+  alias_attribute :private_token, :authentication_token
   scope :not_in_project, lambda { |project|  where("id not in (:ids)", :ids => project.users.map(&:id) ) }
 
   def identifier
-    email.gsub "@", "_"
+    email.gsub /[@.]/, "_"
   end
 
   def is_admin?
@@ -62,9 +64,10 @@ end
 #  updated_at             :datetime
 #  name                   :string(255)
 #  admin                  :boolean         default(FALSE), not null
-#  projects_limit         :integer
-#  skype                  :string
-#  linkedin               :string
-#  twitter                :string
+#  projects_limit         :integer         default(10)
+#  skype                  :string(255)     default(""), not null
+#  linkedin               :string(255)     default(""), not null
+#  twitter                :string(255)     default(""), not null
+#  authentication_token   :string(255)
 #
 

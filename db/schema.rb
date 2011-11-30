@@ -11,11 +11,22 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111101222453) do
+ActiveRecord::Schema.define(:version => 20111127155345) do
+
+  create_table "features", :force => true do |t|
+    t.string   "name"
+    t.string   "branch_name"
+    t.integer  "assignee_id"
+    t.integer  "author_id"
+    t.integer  "project_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "version"
+    t.integer  "status",      :default => 0, :null => false
+  end
 
   create_table "issues", :force => true do |t|
     t.string   "title"
-    t.text     "content"
     t.integer  "assignee_id"
     t.integer  "author_id"
     t.integer  "project_id"
@@ -24,6 +35,7 @@ ActiveRecord::Schema.define(:version => 20111101222453) do
     t.boolean  "closed",      :default => false, :null => false
     t.integer  "position",    :default => 0
     t.boolean  "critical",    :default => false, :null => false
+    t.string   "branch_name"
   end
 
   create_table "keys", :force => true do |t|
@@ -33,6 +45,18 @@ ActiveRecord::Schema.define(:version => 20111101222453) do
     t.text     "key"
     t.string   "title"
     t.string   "identifier"
+  end
+
+  create_table "merge_requests", :force => true do |t|
+    t.string   "target_branch",                    :null => false
+    t.string   "source_branch",                    :null => false
+    t.integer  "project_id",                       :null => false
+    t.integer  "author_id"
+    t.integer  "assignee_id"
+    t.string   "title"
+    t.boolean  "closed",        :default => false, :null => false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "notes", :force => true do |t|
@@ -104,6 +128,7 @@ ActiveRecord::Schema.define(:version => 20111101222453) do
     t.string   "skype",                                 :default => "",    :null => false
     t.string   "linkedin",                              :default => "",    :null => false
     t.string   "twitter",                               :default => "",    :null => false
+    t.string   "authentication_token"
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true

@@ -11,17 +11,18 @@ class Issue < ActiveRecord::Base
   validates_presence_of :author_id
 
   delegate :name,
-           :email, 
-           :to => :author, 
+           :email,
+           :to => :author,
+           :prefix => true
+
+  delegate :name,
+           :email,
+           :to => :assignee,
            :prefix => true
 
   validates :title,
             :presence => true,
             :length   => { :within => 0..255 }
-
-  #validates :content,
-            #:presence => true,
-            #:length   => { :within => 0..2000 }
 
   scope :critical, where(:critical => true)
   scope :non_critical, where(:critical => false)
@@ -31,6 +32,10 @@ class Issue < ActiveRecord::Base
   scope :assigned, lambda { |u| where(:assignee_id => u.id)}
 
   acts_as_list
+
+  def self.open_for(user)
+    opened.assigned(user)
+  end
 
   def today?
     Date.today == created_at.to_date
@@ -46,7 +51,6 @@ end
 #
 #  id          :integer         not null, primary key
 #  title       :string(255)
-#  content     :text
 #  assignee_id :integer
 #  author_id   :integer
 #  project_id  :integer

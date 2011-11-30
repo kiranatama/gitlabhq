@@ -10,29 +10,24 @@ class CommitsController < ApplicationController
   before_filter :require_non_empty_project
   before_filter :load_refs, :only => :index # load @branch, @tag & @ref
 
-
   def index
     @repo = project.repo
-    limit, offset = (params[:limit] || 20), (params[:offset] || 0) 
-
-    @commits = if params[:path]
-                 @repo.log(@ref, params[:path], :max_count => limit, :skip => offset)
-               else
-                 @repo.commits(@ref, limit, offset)
-               end
+    @limit, @offset = (params[:limit] || 20), (params[:offset] || 0)
+    @commits = @project.commits(@ref, params[:path], @limit, @offset)
 
     respond_to do |format|
       format.html # index.html.erb
       format.js
+      format.atom { render :layout => false }
     end
   end
 
   def show
-    @commit = project.repo.commits(params[:id]).first
+    @commit = project.commit(params[:id])
     @notes = project.commit_notes(@commit).fresh.limit(20)
     @note = @project.build_commit_note(@commit)
 
-    respond_to do |format| 
+    respond_to do |format|
       format.html
       format.js { respond_with_notes }
     end

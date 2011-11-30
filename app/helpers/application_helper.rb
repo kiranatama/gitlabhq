@@ -7,15 +7,15 @@ module ApplicationHelper
   end
 
   def fixed_mode?
-    @view_mode == :fixed
+    true
   end
 
   def body_class(default_class = nil)
-    main = content_for(:body_class).blank? ? 
+    main = content_for(:body_class).blank? ?
       default_class :
       content_for(:body_class)
 
-    [main, cookies[:view_style]].join(" ")
+    [main, "collapsed"].join(" ")
   end
 
   def commit_name(project, commit)
@@ -42,11 +42,11 @@ module ApplicationHelper
     else
       "Never"
     end
-  rescue 
+  rescue
     "Never"
   end
 
-  def grouped_options_refs
+  def grouped_options_refs(destination = :tree)
     options = [
       ["Branch", @repo.heads.map(&:name) ],
       [ "Tag", @project.tags ]
@@ -73,7 +73,7 @@ module ApplicationHelper
       project_nav = [
         { :label => "#{@project.code} / Issues", :url => project_issues_path(@project) },
         { :label => "#{@project.code} / Wall", :url => wall_project_path(@project) },
-        { :label => "#{@project.code} / Tree", :url => tree_project_path(@project) },
+        { :label => "#{@project.code} / Tree", :url => tree_project_ref_path(@project, @project.root_ref) },
         { :label => "#{@project.code} / Commits", :url => project_commits_path(@project) },
         { :label => "#{@project.code} / Team", :url => team_project_path(@project) }
       ]

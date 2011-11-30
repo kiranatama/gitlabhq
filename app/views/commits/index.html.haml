@@ -6,13 +6,13 @@
 %h2.icon
   %span
   %d
-    = link_to project_commits_path(@project) do 
+    = link_to project_commits_path(@project) do
       = @project.name
     - if params[:path]
       \/
       %a{:href => "#"}= params[:path].split("/").join(" / ")
 
-.right= render :partial => "projects/refs", :locals => { :destination => project_commits_path(@project) }
+.right= render :partial => "projects/refs", :locals => { :destination => :commits }
 
 %div{:id => dom_id(@project)}
   #commits_list= render "commits"
@@ -20,9 +20,8 @@
 .loading{ :style => "display:none;"}
   %center= image_tag "ajax-loader.gif"
 
-
-
-:javascript
-  $(function(){
-    CommitsList.init("#{@ref}", 20);
-  });
+- if @commits.count == @limit
+  :javascript
+    $(function(){
+      CommitsList.init("#{@ref}", 20);
+    });

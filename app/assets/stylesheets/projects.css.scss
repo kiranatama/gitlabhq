@@ -1,29 +1,20 @@
-// Place all the styles related to the Projects controller here.
-// They will automatically be included in application.css.
-// You can use Sass (SCSS) here: http://sass-lang.com/
-
+/** MIXINS **/
 @mixin round-borders-bottom($radius) {
   border-top: 1px solid #eaeaea;
-
   -moz-border-radius-bottomright: $radius;
   -moz-border-radius-bottomleft: $radius;
-
   border-bottom-right-radius: $radius;
   border-bottom-left-radius: $radius;
-
   -webkit-border-bottom-left-radius: $radius;
   -webkit-border-bottom-right-radius: $radius;
 }
 
 @mixin round-borders-top($radius) {
   border-top: 1px solid #eaeaea;
-
   -moz-border-radius-topright: $radius;
   -moz-border-radius-topleft: $radius;
-
   border-top-right-radius: $radius;
   border-top-left-radius: $radius;
-
   -webkit-border-top-left-radius: $radius;
   -webkit-border-top-right-radius: $radius;
 }
@@ -35,58 +26,9 @@
   border-radius: $radius;
 }
 
-@mixin hover-color {
-  background: #fff !important;
-  background: -webkit-gradient(linear,left top,left bottom,from(#fff),to(#FFF6BF)) !important;
-  background: -moz-linear-gradient(top,#fff,#FFF6BF) !important;
-  background: transparent 9 !important;
-}
-
-.diff_file {
-  border:1px solid #CCC;
-  margin-bottom:1em;
-
-  .diff_file_header {
-    padding:5px 5px;
-    border-bottom:1px solid #CCC;
-    background: #eee;
-  }
-  .diff_file_content {
-    overflow:auto;
-    overflow-y:hidden;
-    background:#fff;
-    color:#333;
-    font-size: 12px;
-    font-family: 'Courier New', 'andale mono','lucida console',monospace;
-  }
-  .diff_file_content_image {
-    background:#eee;
-    text-align:center;
-    img {
-      padding:100px;
-      max-width:300px;
-    }
-  }
-}
-
-#logo {
- &:hover {
-   background:none;
- }
-}
-
+/** File stat **/
 .file_stats {
-  margin-bottom:10px;
-  @include round-borders-all(4px);
-
   span {
-    border-top: 1px solid #eaeaea;
-    padding:5px 5px;
-    display:block;
-    &:first-child {
-      border-top:none;
-    }
-
     img {
       width:18px;
       float:left;
@@ -99,85 +41,17 @@
   @include round-borders-all(4px);
   padding: 4px 0px;
 }
+
 table.round-borders {
   float:left;
-}
-
-@mixin panel-color {
-  background: #111 !important;
-  background: -webkit-gradient(linear,left top,left bottom,from(#333),to(#111)) !important;
-  background: -moz-linear-gradient(top,#333,#111) !important;
-  background: transparent 9 !important;
-}
-
-#header-panel {
-  @include panel-color;
-  height:40px;
-  position:fixed;
-  z-index:999;
-  top:0px;
-  width:100%;
-  margin-bottom:10px;
-  overflow:hidden;
-  .button{
-    color:#bbb;
-    border:none;
-    margin:0px;
-    height:25px;
-    background:transparent;
-    padding:10px 20px 5px 20px;
-    &:hover{
-      color:white;
-    }
-
-    &.current {
-      border-bottom: 3px solid #EAEAEA !important;
-      padding: 10px 20px 0;
-      color: #eaeaea;
-    }
-  }
-  .search-holder {
-    float:left;
-    width:290px;
-    input {
-      @include round-borders-all(4px);
-      width:290px;
-      border-color:#888;
-      padding:5px;
-      background:#666;
-      color:#222;
-      &:focus {
-        background:#fff;
-        color:#000;
-      }
-    }
-  }
-}
-
-#content-container{
-  min-height:250px;
-  background: #fff;
-  @include round-borders-bottom(8px);
-  borders:2px solid #eaeaea;
-  border-top: none;
-  padding:20px;
+  text-align: left;
 }
 
 a {
   color: #111;
 }
 
-.diff_file_content{
-  .old_line, .new_line {
-    background:#ECECEC;
-    color:#777;
-    width:30px;
-    float:left;
-    padding: 0px 5px;
-    border-right: 1px solid #ccc;
-  }
-}
-
+/** FILE CONTENT VIEW **/
 .view_file_content{
   .old_line, .new_line {
     background:#ECECEC;
@@ -197,9 +71,17 @@ a {
   margin-bottom:1em;
 
   .view_file_header {
-    padding:5px 5px;
-    border-bottom:1px solid #CCC;
-    background: #eee;
+    background-image: -webkit-gradient(linear, 0 0, 0 26, color-stop(0.076, #fefefe), to(#F6F7F8));
+    background-image: -webkit-linear-gradient(#fefefe 7.6%, #F6F7F8);
+    background-image: -moz-linear-gradient(#fefefe 7.6%, #F6F7F8);
+    background-image: -o-linear-gradient(#fefefe 7.6%, #F6F7F8);
+    margin: 0;
+    font-weight: normal;
+    font-weight: bold;
+    text-align: left;
+    color: #666;
+    border-bottom: 1px solid #DEE2E3;
+    padding: .9em 1em;
   }
   .view_file_content {
     background:#fff;
@@ -216,10 +98,39 @@ a {
   }
 }
 
-.back_small.button{
-
+td.code {
+  width: 100%;
+  .highlight {
+    margin-left: 55px;
+    overflow:auto;
+    overflow-y:hidden;
+    border-left: 1px solid #DEE2E3;
+    background: white;
+  }
+}
+.highlight pre {
+  white-space: pre;
+  word-wrap:normal;
 }
 
+table.highlighttable { 
+  border: none;
+  background: #F7F7F7;
+}
+body.project-page table.highlighttable td { border: none }
+table.highlighttable tr:hover { background:none;}
+
+table.highlighttable pre{
+  line-height:16px !important;
+  font-size:12px !important;
+}
+
+table.highlighttable .linenodiv pre {
+  text-align: right;
+  padding-right: 4px;
+}
+
+/** PROJECTS **/
 input.ssh_project_url {
   padding:5px;
   margin:0px;
@@ -243,43 +154,15 @@ input.ssh_project_url {
   clear: both;
 }
 
-.top_project_menu {
-  a {
-    border-right: 1px solid #FFFFFF;
-    box-shadow: -1px 0 #DDDDDD inset;
-    color: #666;
-    display: block;
-    font-size: 16px;
-    text-decoration: none;
-    line-height: 20px;
-    padding: 11px 26px 12px 24px;
-    text-shadow: 0 1px 0 #FFFFFF;
-    float:left;
-
-    &.current {
-      background-color: #FFFFFF;
-      color: #222222;
-    }
-  }
-}
-
-.top_bar {
-  margin-top:50px;
-  background-color: #F4F4F4;
-  @include round-borders-top(8px);
-  box-shadow: 0 1px #FFFFFF inset, 0 -1px #DDDDDD inset;
-  height: 43px;
-  overflow: hidden;
-  width:990px;
-}
-
 /** FORM INPUTS **/
-
+.new_merge_request,
+.edit_merge_request,
 .user_new,
 .new_key,
 .new_issue,
 .new_note,
 .edit_user,
+.edit_issue,
 .new_project,
 .new_snippet,
 .edit_snippet,
@@ -296,7 +179,6 @@ input.ssh_project_url {
 }
 
 .input_button {
-  //@include round-borders-all(4px);
   padding:8px;
   font-size:14px;
   cursor:pointer;
@@ -307,39 +189,14 @@ input.ssh_project_url {
   border-width: 1px;
 }
 
-
-.top_menu_count {
-  background: none repeat scroll 0 0 white;
-  color: #333;
-  border-color: #4BB8D2;
-  padding: 2px;
-  font-size:10px;
-  border-top:none;
-  text-align:center;
-  float:right;
-  width:25px;
-
-
-}
-
-#logo {
-  color: #EAEAEA;
-  font-family: monospace;
-  font-size: 26px;
-  padding: 4px;
-  text-decoration: none;
-  text-shadow: #555 1px 1px;
-}
-
 /** FLASH **/
-
 #flash_container {
-  height:40px;
+  height:45px;
   position:fixed;
-  z-index:1009;
+  z-index:10001;
   top:0px;
   width:100%;
-  margin-bottom:10px;
+  margin-bottom:15px;
   overflow:hidden;
   background:white;
   cursor:pointer;
@@ -354,12 +211,11 @@ input.ssh_project_url {
 }
 
 /** Buttons **/
-
 .lbutton,
 .lite_button {
   display:block;
   float:left;
-  margin: 0px 5px;
+  margin: 0px 5px 0px 0px;
   padding:5px 10px;
 
   font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
@@ -386,94 +242,102 @@ input.ssh_project_url {
   }
 }
 
-/** Notes **/
-
-#notes-list {
-  display:block;
-  list-style:none;
-  margin:0px;
-  padding:0px;
-}
-
-.notes_count {
-  background: none repeat scroll 0 0 #FFF6BF;
-  border-color: #FFD324;
-  color: #514721;
-  border: 2px solid #DDDDDD;
-  margin-bottom: 1em;
-  margin-top: 3px;
-  padding: 2px 5px;
-  position: relative;
-  right: 6px;
-  top: 6px;
-}
-
-.issue_notes {
-  .note_content {
-    float:left;
-    width:400px;
-  }
-}
-
 #user_projects_limit{
   width: 60px;
-}
-
-.project_thumb {
-  margin:20px 0;
-  width: 250px;
-  float:left;
-  padding:20px;
-  text-align:center;
-  p, h4 {
-    text-align:left;
-  }
-  .lbutton {
-    float:left;
-  }
 }
 
 .handle:hover{
   cursor: move;
 }
 
-.handle{
-  width: 12px;
-  height: 12px;
-  padding: 10px;
-}
-
-
-/* Note textare */
-#note_note {
-  height:100px;
-  width:97%;
-  font-size:14px;
-}
-
-#new_note {
-  #note_note {
-    height:25px;
-  }
-  .attach_holder {
-    display:none;
+.project-refs-form {
+  span {
+    background: none !important;
+    position:static !important;
+    width:auto !important;
+    height: auto !important;
   }
 }
 
+.project-refs-select {
+  width:200px;
+}
 
+.filter .left { margin-right:15px; }
 
+body.project-page table .commit {
+  a.tree-commit-link {
+    color:gray;
+    &:hover {
+      text-decoration:underline;
+    }
+  }
+}
+
+/** NEW PROJECT **/
+.new-project-hodler {
+  .icon span { background-position: -31px -70px; }
+  td { border-bottom: 1px solid #DEE2E3; }
+}
+
+/** Feed entry **/
+.commit,
+.snippet,
+.message {
+  .title {
+    color:#666;
+    a { color:#666 !important; }
+    p { margin-top:0px; }
+  }
+  .author { color: #999 }
+}
+
+/** JQuery UI **/
+.ui-autocomplete { @include round-borders-all(5px); }
+.ui-menu-item { cursor: pointer }
+.ui-selectmenu{
+  @include round-borders-all(4px);
+  margin-right:10px;
+  font-size:1.5em;
+  height:auto;
+  font-weight:bold;
+  .ui-selectmenu-status {
+    padding:3px 10px;
+  }
+}
+
+/** Snippets **/
+.new_snippet textarea,
+.edit_snippet textarea {
+  height:300px;
+  padding: 8px;
+  width: 95%;
+}
+.snippet .action-links {
+  display:none;
+  a {
+    margin-left:10px;
+  }
+}
+.snippet:hover .action-links { display:block; }
+
+/** ISSUES TAGS **/
 .tag {
   @include round-borders-all(4px);
   padding:2px 4px;
   border:none;
   text-shadow:none;
 
-  &.high {
+  &.inline { 
+    display:inline;
+  }
+
+  &.high, &.closed {
     background: #D12F19;
     color:white;
   }
 
-  &.today {
+  &.today, &.open {
     background: #44aa22;
     color:white;
   }
@@ -490,189 +354,116 @@ input.ssh_project_url {
     background: #2c5c66;
     color:white;
   }
-}
-
-#issues-table .issue {
-  &.critical {
-    td {
-      //background: #D12F19;
-      //color:#fff;
-    }
+  &.note {
+    background: #2c5c66;
+    color:white;
+  }
+  &.issue {
+    background: #D12F19;
+    color:white;
+  }
+  &.commit {
+    background: #44aacc;
+    color:white;
   }
 }
 
-.top_panel_issues{
-  #issue_search_form {
-    margin:5px 0;
-    input {
-      border:1px solid #D3D3D3;
-      padding: 3px;
-      height: 28px;
-      width: 300px;
-      -webkit-appearance:none;
-      box-sizing: border-box;
-      -moz-box-sizing: border-box;
+#holder {
+  border: solid 1px #999;
+  cursor: move;
+  height: 70%;
+  overflow: hidden;
+}
 
-      &:focus {
-        border-color:#c2e1ef;
+/* Project Dashboard Page */
+html, body { height: 100%; }
+
+body.dashboard.project-page .news-feed h2{float: left;}
+body.dashboard.project-page .news-feed .project-updates  {margin-bottom: 20px; display: block; width: 100%;}
+body.dashboard.project-page .news-feed .project-updates .data{ padding: 0}
+body.dashboard.project-page .news-feed .project-updates a.project-update {padding: 10px; border-bottom: 1px solid #eee; overflow: hidden; display: block;}
+body.dashboard.project-page .news-feed .project-updates a.project-update:last-child{border-bottom: 0}
+body.dashboard.project-page .news-feed .project-updates a.project-update img{float: left; margin-right: 10px;}
+body.dashboard.project-page .news-feed .project-updates a.project-update span.update-title, .dashboard-page .news-feed .project-updates li a span.update-author{display: block;}
+body.dashboard.project-page .news-feed .project-updates a.project-update span.update-title{margin-bottom: 10px}
+body.dashboard.project-page .news-feed .project-updates a.project-update span.update-author{color: #999; font-weight: normal; font-style: italic;}
+body.dashboard.project-page .news-feed .project-updates a.project-update span.update-author strong{font-weight: bold; font-style: normal;}
+/* eo Dashboard Page */
+
+
+/** Merge requests */
+body.project-page .merge-request-commits  {margin-bottom: 20px; display: block; width: 100%;}
+body.project-page .merge-request-commits .data{ padding: 0}
+body.project-page .merge-request-commits a.commit {padding: 10px; border-bottom: 1px solid #eee; overflow: hidden; display: block;}
+body.project-page .merge-request-commits a.commit:last-child{border-bottom: 0}
+body.project-page .merge-request-commits a.commit img{float: left; margin-right: 10px;}
+body.project-page .merge-request-commits a.commit span.update-title, .dashboard-page .news-feed .project-updates li a span.update-author{display: block;}
+body.project-page .merge-request-commits a.commit span.update-title{margin-bottom: 10px}
+body.project-page .merge-request-commits a.commit span.update-author{color: #999; font-weight: normal; font-style: italic;}
+body.project-page .merge-request-commits a.commit span.update-author strong{font-weight: bold; font-style: normal;}
+
+
+/** Update entry **/
+.update-data { padding: 0 }
+.update-data { width:100%; }
+.update-data.ui-box .data { padding:0; }
+a.update-item {padding: 10px; border-bottom: 1px solid #eee; overflow: hidden; display: block;}
+a.update-item:last-child{border-bottom: 0}
+a.update-item img{float: left; margin-right: 10px;}
+a.update-item span.update-title, .dashboard-page .news-feed .project-updates li a span.update-author{display: block;}
+a.update-item span.update-title{margin-bottom: 10px}
+a.update-item span.update-author{color: #999; font-weight: normal; font-style: italic;}
+a.update-item span.update-author strong{font-weight: bold; font-style: normal;}
+
+
+body.project-page .team_member_new .span-6, .team_member_edit .span-6{ padding:10px 0; }
+
+body.projects-page input.text.git-url.project_list_url { width:165px; }
+
+
+
+body.project-page table.no-borders tr,
+body.project-page table.no-borders td{ 
+  border:none;
+}
+
+#gitlab-tabs { 
+  .ui-tabs-nav {
+    border-bottom: 1px solid #DEDFE1;
+
+    li { 
+      background: none;
+      border:none;
+      font-size: 16px;
+      margin: 0;
+      padding: 0;
+
+      a { 
+        margin: 0;
+        padding: 10px 16px;
+        width:150px;
       }
-    }
-  }
+
+      &.ui-tabs-selected { 
+        background-image: -webkit-gradient(linear, 0 0, 0 26, color-stop(0.076, #fefefe), to(#F6F7F8));
+        background-image: -webkit-linear-gradient(#fefefe 7.6%, #F6F7F8);
+        background-image: -moz-linear-gradient(#fefefe 7.6%, #F6F7F8);
+        background-image: -o-linear-gradient(#fefefe 7.6%, #F6F7F8);
+        font-weight: bold;
+        border:1px solid #DEDFE1;
+        border-bottom: 1px solid #DEDFE1;
+        -webkit-border-top-left-radius: 5px;
+        -webkit-border-top-right-radius: 5px;
+        -moz-border-radius-topleft: 5px;
+        -moz-border-radius-topright: 5px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+      }
+    } 
+  } 
 }
 
-.left { 
-  float:left;
-}
-.right { 
-  float:right;
-}
-
-.width-50p{
-  width:50%;
-}
-.width-49p{
-  width:49%;
-}
-.width-30p{
-  width:30%;
-}
-.width-65p{
-  width:65%;
-}
-pre.commit_message {
-  white-space: pre-wrap;
-}
-
-#container { 
-/*  min-height:100%;*/
-}
-.ui-selectmenu{
-  @include round-borders-all(4px);
-  margin-right:10px;
-  font-size:1.5em;
-  height:auto;
-  font-weight:bold;
-  .ui-selectmenu-status { 
-    padding:3px 10px;
-  }
-}
-
-td.code { 
-  width: 100%;
-  .highlight { 
-    margin-left: 55px;
-    overflow:auto;
-    overflow-y:hidden;
-  }
-}
-.highlight pre { 
-  white-space: pre;
-  word-wrap:normal;
-}
-
-.highlighttable tr:hover {
-  background:white;
-}
-table.highlighttable pre{ 
-  line-height:16px !important;
-  font-size:12px !important;
-	text-align: right;
-	padding-right: 4px;
-}
-
-.project-refs-form { 
-  span {
-    background: none !important;
-    position:static !important;
-    width:auto !important;
-    height: auto !important;
-  }
-}
-
-.project-refs-select {
-  width:200px;
-}
-
-.issues_filter {
-  margin-top:10px;
-  .left { 
-    margin-right:15px;
-  }
-}
-.filter .left { margin-right:15px; }
- 
-
-.cgray { color:gray; }
-.cred { color:#D12F19; }
-.cgreen { color:#44aa22; }
-
-body.project-page table .commit { 
-  a.tree-commit-link { 
-    color:gray;
-    &:hover { 
-      text-decoration:underline;
-    }
-  }
-}
-
-#notes-list .note .delete-note { display:none; }
-#notes-list .note:hover .delete-note { display:block; }
-
-#issues-table-holder .issue .action-links {
-  display:none; 
-  a { 
-    margin-left:10px;
-  }
-}
-  
-.issue-number {
-  float: left;
-  border-radius: 5px;
-  text-shadow: none;
-  background: rgba(0, 0, 0, 0.12);
-  text-align: center;
-  padding: 14px 8px;
-  width: 40px;
-  margin-right: 10px;
-  color: #444;
-}
-
-#issues-table-holder .issue:hover .action-links { display:block; }
-
-body.project-page #notes-list .note {padding: 10px; border-bottom: 1px solid #eee; overflow: hidden; display: block;}
-body.project-page #notes-list .note {padding: 10px; border-bottom: 1px solid #eee; overflow: hidden; display: block;}
-body.project-page #notes-list .note img{float: left; margin-right: 10px;}
-body.project-page #notes-list .note span.note-title{display: block;}
-body.project-page #notes-list .note span.note-title{margin-bottom: 10px}
-body.project-page #notes-list .note span.note-author{color: #999; font-weight: normal; font-style: italic;}
-body.project-page #notes-list .note span.note-author strong{font-weight: bold; font-style: normal;}
-
-
-/** NEW PROJECT **/
-.new-project-hodler { 
-  .icon span { 
-    background-position: -31px -70px;
-  }
-  td {
-    border-bottom: 1px solid #DEE2E3;
-  }
-}
-
-//.message .note-title p { margin-bottom:0px; }
-
-.commit,
-.message { 
-  .title { 
-    color:#666;
-    a { 
-      color:#666 !important;
-    }
-    p { 
-      margin-top:0px;
-    }
-  }
-
-  .author { 
-    color: #999
-  }
+.ajax-tab-loading { 
+  padding:40px;
+  display:none;
 }

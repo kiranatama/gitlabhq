@@ -3,7 +3,6 @@ Gitlab::Application.routes.draw do
   get 'tags'=> 'tags#index'
   get 'tags/:tag' => 'projects#index'
 
-
   namespace :admin do
     resources :users
     resources :projects
@@ -18,6 +17,7 @@ Gitlab::Application.routes.draw do
   get "errors/gitosis"
   get "profile/password", :to => "profile#password"
   put "profile/password", :to => "profile#password_update"
+  put "profile/reset_private_token", :to => "profile#reset_private_token"
   put "profile/edit", :to => "profile#social_update"
   get "profile", :to => "profile#show"
   get "dashboard", :to => "dashboard#index"
@@ -30,32 +30,48 @@ Gitlab::Application.routes.draw do
 
   resources :projects, :except => [:new, :create, :index], :path => "/" do
     member do
-      get "tree"
-      get "blob"
       get "team"
       get "wall"
-
-      # tree viewer
-      get "tree/:commit_id" => "projects#tree"
-      get "tree/:commit_id/:path" => "projects#tree",
-      :as => :tree_file,
-      :constraints => {
-        :id => /[a-zA-Z0-9_\-]+/,
-        :commit_id => /[a-zA-Z0-9]+/,
-        :path => /.*/
-      }
-
+      get "graph"
     end
 
+    resources :refs, :only => [], :path => "/" do 
+      collection do 
+        get "switch"
+      end
+
+      member do 
+        get "tree", :constraints => { :id => /[a-zA-Z.\/0-9_\-]+/ }
+        get "blob", 
+          :constraints => {
+            :id => /[a-zA-Z.0-9\/_\-]+/,
+            :path => /.*/
+          }
+
+
+        # tree viewer
+        get "tree/:path" => "refs#tree",
+          :as => :tree_file,
+          :constraints => {
+            :id => /[a-zA-Z.0-9\/_\-]+/,
+            :path => /.*/
+          }
+      end
+    end
+
+    resources :merge_requests do 
+      member do 
+        get :diffs
+        get :commits
+      end
+    end
     resources :snippets
     resources :commits
     resources :team_members
     resources :issues do
       collection do
-        post :sort
-      end
-      collection do
-        get :search
+        post  :sort
+        get   :search
       end
     end
     resources :notes, :only => [:create, :destroy]

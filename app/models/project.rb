@@ -3,6 +3,7 @@ require "grit"
 class Project < ActiveRecord::Base
   belongs_to :owner, :class_name => "User"
 
+  has_many :merge_requests, :dependent => :destroy
   has_many :issues, :dependent => :destroy, :order => "position"
   has_many :users_projects, :dependent => :destroy
   has_many :users, :through => :users_projects
@@ -74,8 +75,16 @@ class Project < ActiveRecord::Base
     users_projects.find_by_user_id(user.id) if user
   end
 
+  def fresh_issues(n)
+    issues.includes(:project, :author).order("created_at desc").first(n)
+  end
+
+  def fresh_notes(n)
+    notes.inc_author_project.order("created_at desc").first(n)
+  end
+
   def common_notes
-    notes.where(:noteable_type => ["", nil])
+    notes.where(:noteable_type => ["", nil]).inc_author_project
   end
 
   def build_commit_note(commit)
@@ -113,6 +122,10 @@ class Project < ActiveRecord::Base
     @admins ||=users_projects.includes(:user).where(:admin => true).map(&:user)
   end
 
+  def root_ref 
+    "master"
+  end
+
   def public?
     !private_flag
   end
@@ -121,9 +134,9 @@ class Project < ActiveRecord::Base
     private_flag
   end
 
-  def last_activity 
+  def last_activity
     updates(1).first
-  rescue 
+  rescue
     nil
   end
 
@@ -131,11 +144,28 @@ class Project < ActiveRecord::Base
     last_activity.try(:created_at)
   end
 
+  # Get project updates from cache
+  # or calculate. 
+  def cached_updates(limit, expire = 2.minutes)
+    activities_key = "project_#{id}_activities"
+    cached_activities = Rails.cache.read(activities_key)
+    if cached_activities
+      activities = cached_activities
+    else
+      activities = updates(limit)
+      Rails.cache.write(activities_key, activities, :expires_in => 60.seconds)
+    end
+
+    activities
+  end
+
+  # Get 20 events for project like
+  # commits, issues or notes
   def updates(n = 3)
-    [ 
+    [
       fresh_commits(n),
-      issues.last(n),
-      notes.fresh.limit(n)
+      fresh_issues(n),
+      fresh_notes(n)
     ].compact.flatten.sort do |x, y|
       y.created_at <=> x.created_at
     end[0...n]

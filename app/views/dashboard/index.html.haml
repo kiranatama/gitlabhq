@@ -4,8 +4,8 @@
   %aside
     %h4
       - if current_user.can_create_project?
-        %a.button-small.button-green{:href => new_project_path} New Repository
-      Your Repositories
+        %a.button-small.button-green{:href => new_project_path} New Project
+      Your Projects
     %ol.project-list
       - @projects.each do |project|
         %li
@@ -21,17 +21,19 @@
       Dashboard
     - @active_projects.first(3).each do |project|
       .project-box.project-updates.ui-box.ui-box-small.ui-box-big
-        %h3= project.name
-        .data
-          - project.updates(4).each do |update|
-            %a.project-update{:href => dashboard_feed_path(project, update)}
-              = image_tag gravatar_icon(update.author_email), :class => "left", :width => 40
-              %span.update-title
-                = dashboard_feed_title(update)
-              %span.update-author
-                %strong= update.author_name
-                authored
-                = time_ago_in_words(update.created_at) 
-                ago
-  / #news-feed
-/ #dashboard-content
+        = link_to project, do 
+          %h3= project.name
+          .data
+            - project.updates(3).each do |update|
+              %a.project-update{:href => dashboard_feed_path(project, update)}
+                = image_tag gravatar_icon(update.author_email), :class => "left", :width => 40
+                %span.update-title
+                  = dashboard_feed_title(update)
+                %span.update-author
+                  %strong= update.author_name
+                  authored
+                  = time_ago_in_words(update.created_at)
+                  ago
+                .right
+                  - klass = update.class.to_s.split("::").last.downcase
+                  %span.tag{ :class => klass }= klass

@@ -1,0 +1,51 @@
+#tree-breadcrumbs
+  %h2.icon
+    %span
+    %d
+      = link_to tree_project_ref_path(@project, @ref, :path => nil), :remote => true do
+        = @project.code
+      - tree.breadcrumbs(2) do |link|
+        \/
+        = link
+      &nbsp;
+  .right= render :partial => "projects/refs", :locals => { :destination => :tree }
+.clear
+#tree-content-holder
+  - if tree.is_blob?
+    = render :partial => "refs/tree_file", :locals => { :name => tree.name, :content => tree.data, :file => tree }
+  - else
+    - contents = tree.contents
+    %table#tree-slider.round-borders
+      %thead
+        %th Name
+        %th Last Update
+        %th
+          Last commit
+          = link_to "history", tree.history_path, :class => "right"
+      
+      - if tree.up_dir?
+        %tr{ :class => "tree-item", :url => tree.up_dir_path }
+          %td.tree-item-file-name
+            = image_tag "dir.png"
+            = link_to "..", tree.up_dir_path, :remote => :true
+          %td
+          %td
+
+      - contents.select{ |i| i.is_a?(Grit::Tree)}.each do |content|
+        = render :partial => "refs/tree_item", :locals => { :content => content }
+      - contents.select{ |i| i.is_a?(Grit::Blob)}.each do |content|
+        = render :partial => "refs/tree_item", :locals => { :content => content }
+
+:javascript
+  $(function(){
+    $('select#branch').selectmenu({style:'popup', width:200});
+    $('select#tag').selectmenu({style:'popup', width:200});
+  });
+
+- if params[:path] && request.xhr?
+  :javascript
+    $(window).unbind('popstate');
+    $(window).bind('popstate', function() {
+      if(location.pathname.search("tree") != -1) {
+        $.ajax({type: "GET", url: location.pathname, dataType: "script"})}
+        else { location.href = location.pathname;}});

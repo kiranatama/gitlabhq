@@ -9,7 +9,7 @@
               %data.commit-button
                 = truncate(commit.id.to_s, :length => 16)
                 %i
-              %data.commit-browse{ :onclick => "location.href='#{tree_project_path(@project, :commit_id => commit.id)}';return false;"}
+              %data.commit-browse{ :onclick => "location.href='#{tree_project_ref_path(@project, commit.id)}';return false;"}
                 Browse Code
             - if commit.author_email
               = image_tag gravatar_icon(commit.author_email), :class => "left", :width => 40, :style => "padding-right:5px;"
@@ -17,7 +17,7 @@
               = image_tag "no_avatar.png", :class => "left", :width => 40, :style => "padding-right:5px;"
             %span.commit-title
               %strong
-                = truncate(commit.safe_message, :length => fixed_mode? ? 60 : 120)
+                = truncate(commit.safe_message, :length => 60)
             %span.commit-author
               %strong= commit.author_name
               = time_ago_in_words(commit.committed_date)
