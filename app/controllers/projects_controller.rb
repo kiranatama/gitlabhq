@@ -8,13 +8,12 @@ class ProjectsController < ApplicationController
   before_filter :add_project_abilities
   before_filter :authorize_read_project!, :except => [:index, :new, :create]
   before_filter :authorize_admin_project!, :only => [:edit, :update, :destroy]
-  before_filter :require_non_empty_project, :only => [:blob, :tree]
-  before_filter :load_refs, :only => :tree # load @branch, @tag & @ref
+  before_filter :require_non_empty_project, :only => [:blob, :tree, :graph]
 
   def index
-    source = current_user.projects
-    source = source.tagged_with(params[:tag]) unless params[:tag].blank?
-    @projects = source.all
+    @projects = current_user.projects
+    @projects = @projects.select(&:last_activity_date).sort_by(&:last_activity_date).reverse
+    @events = Event.where(:project_id => @projects.map(&:id)).recent.limit(20)
   end
 
   def new
@@ -30,7 +29,11 @@ class ProjectsController < ApplicationController
 
     Project.transaction do
       @project.save!
-      @project.users_projects.create!(:admin => true, :read => true, :write => true, :user => current_user)
+      @project.users_projects.create!(:project_access => UsersProject::MASTER, :user => current_user)
+
+      # when project saved no team member exist so 
+      # project repository should be updated after first user add
+      @project.update_repository
     end
 
     respond_to do |format|
@@ -42,8 +45,8 @@ class ProjectsController < ApplicationController
         format.js
       end
     end
-  rescue Gitosis::AccessDenied
-    render :js => "location.href = '#{errors_gitosis_path}'" and return
+  rescue Gitlabhq::Gitolite::AccessDenied
+    render :js => "location.href = '#{errors_githost_path}'" and return
   rescue StandardError => ex
     @project.errors.add(:base, "Cant save project. Please try again later")
     respond_to do |format|
@@ -55,7 +58,7 @@ class ProjectsController < ApplicationController
   def update
     respond_to do |format|
       if project.update_attributes(params[:project])
-        format.html { redirect_to project, :notice => 'Project was successfully updated.' }
+        format.html { redirect_to edit_project_path(project), :notice => 'Project was successfully updated.' }
         format.js
       else
         format.html { render action: "edit" }
@@ -65,9 +68,22 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    return render "projects/empty" unless @project.repo_exists?
     limit = (params[:limit] || 20).to_i
-    @activities = @project.cached_updates(limit)
+    @events = @project.events.recent.limit(limit)
+
+    respond_to do |format|
+      format.html do 
+         if @project.repo_exists? && @project.has_commits?
+           render :show
+         else
+           render "projects/empty"
+         end
+      end
+    end
+  end
+
+  def files
+    @notes = @project.notes.where("attachment != 'NULL'").order("created_at DESC").limit(100)
   end
 
   #
@@ -75,22 +91,25 @@ class ProjectsController < ApplicationController
   #
 
   def wall
+    return render_404 unless @project.wall_enabled
     @note = Note.new
-    @notes = @project.common_notes.order("created_at DESC")
-    @notes = @notes.fresh.limit(20)
 
     respond_to do |format|
       format.html
-      format.js { respond_with_notes }
     end
   end
 
   def graph
+    render_full_content
     @days_json, @commits_json = GraphCommit.to_graph(project)
   end
 
   def destroy
+    # Disable the UsersProject update_repository call, otherwise it will be
+    # called once for every person removed from the project
+    UsersProject.skip_callback(:destroy, :after, :update_repository)
     project.destroy
+    UsersProject.set_callback(:destroy, :after, :update_repository)
 
     respond_to do |format|
       format.html { redirect_to projects_url }
@@ -101,6 +120,7 @@ class ProjectsController < ApplicationController
 
   def project
     @project ||= Project.find_by_code(params[:id])
+    @project || render_404
   end
 
   def determine_layout

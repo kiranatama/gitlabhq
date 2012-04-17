@@ -1,23 +1,20 @@
-- if !@snippet.expired?
-  .ui-box.width-100p
-    %h3
-      = @snippet.title
-      .right= @snippet.file_name
-    .data.no-padding
-      :erb
-        <%= raw @snippet.colorize %>
+= render "projects/project_head"
 
-    .buttons
-      - if can?(current_user, :admin_snippet, @project) || @snippet.author == current_user
-        = link_to 'Edit', edit_project_snippet_path(@project, @snippet), :class => "grey-button"
-      - if can?(current_user, :admin_snippet, @project) || @snippet.author == current_user
-        .right= link_to 'Destroy', [@project, @snippet], :confirm => 'Are you sure?', :method => :delete, :class => "grey-button delete-snippet negative", :id => "destroy_snippet_#{@snippet.id}"
-  .clear
-  %br
-  .snippet_notes= render "notes/notes"
+%h3
+  = @snippet.title
+  %small= @snippet.file_name
+  - if can?(current_user, :admin_snippet, @project) || @snippet.author == current_user
+    = link_to "Edit", edit_project_snippet_path(@project, @snippet), :class => "btn small right"
 
-  .clear
+%br
+#tree-holder
+  #tree-content-holder
+    .view_file
+      .view_file_header
+        %strong= @snippet.file_name
+      .view_file_content
+        %div{:class => current_user.dark_scheme ? "black" : ""} 
+          :erb
+            <%= raw @snippet.colorize %>
 
-- else
-  %h2
-    Sorry, this snippet is no longer exists
+= render "notes/notes", :tid => @snippet.id, :tt => "snippet"

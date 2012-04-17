@@ -1,9 +1,13 @@
 class KeysController < ApplicationController
   layout "profile"
-  respond_to :js
+  respond_to :js, :html
 
   def index
     @keys = current_user.keys.all
+  end
+
+  def show
+    @key = current_user.keys.find(params[:id])
   end
 
   def new

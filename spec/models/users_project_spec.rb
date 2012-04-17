@@ -20,13 +20,11 @@ end
 #
 # Table name: users_projects
 #
-#  id         :integer         not null, primary key
-#  user_id    :integer         not null
-#  project_id :integer         not null
-#  read       :boolean         default(FALSE)
-#  write      :boolean         default(FALSE)
-#  admin      :boolean         default(FALSE)
-#  created_at :datetime
-#  updated_at :datetime
+#  id             :integer         not null, primary key
+#  user_id        :integer         not null
+#  project_id     :integer         not null
+#  created_at     :datetime
+#  updated_at     :datetime
+#  project_access :integer         default(0), not null
 #
 

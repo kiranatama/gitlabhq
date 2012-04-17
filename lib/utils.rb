@@ -16,44 +16,26 @@ module Utils
     end
   end
 
-  module CharEncode
-    def encode(string)
-      cd = CharDet.detect(string)
-      if cd.confidence > 0.6
-        string.force_encoding(cd.encoding)
-      end
-      string.encode("utf-8", :undef => :replace, :replace => "?", :invalid => :replace)
-    end
-  end
-
   module Colorize
-    include CharEncode
     def colorize
-      system_colorize(encode(data), name)
+      system_colorize(data, name)
     end
 
     def system_colorize(data, file_name)
+      options = { :encoding => 'utf-8', :linenos => 'True' }
+
+      # Try detect language with pygments
+      Pygments.highlight data, :filename => file_name, :options => options
+    rescue 
+      # if it fails use manual detection
       ft = handle_file_type(file_name)
-      Pygments.highlight(data, :lexer => ft, :options => { :encoding => 'utf-8', :linenos => 'True' })
+      Pygments.highlight(data, :lexer => ft, :options => options)
     end
 
-    def handle_file_type(file_name, mime_type = nil)
-      if file_name =~ /(\.rb|\.ru|\.rake|Rakefile|\.gemspec|\.rbx|Gemfile)$/
+    def handle_file_type(file_name)
+      case file_name
+      when /(\.ru|Gemfile)$/
         :ruby
-      elsif file_name =~ /\.py$/
-        :python
-      elsif file_name =~ /(\.pl|\.scala|\.c|\.cpp|\.java|\.haml|\.html|\.sass|\.scss|\.xml|\.php|\.erb)$/
-        $1[1..-1].to_sym
-      elsif file_name =~ /\.js$/
-        :javascript
-      elsif file_name =~ /\.sh$/
-        :bash
-      elsif file_name =~ /\.coffee$/
-        :coffeescript
-      elsif file_name =~ /\.yml$/
-        :yaml
-      elsif file_name =~ /\.md$/
-        :minid
       else
         :text
       end

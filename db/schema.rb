@@ -11,18 +11,18 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111127155345) do
+ActiveRecord::Schema.define(:version => 20120413135904) do
 
-  create_table "features", :force => true do |t|
-    t.string   "name"
-    t.string   "branch_name"
-    t.integer  "assignee_id"
-    t.integer  "author_id"
+  create_table "events", :force => true do |t|
+    t.string   "target_type"
+    t.integer  "target_id"
+    t.string   "title"
+    t.text     "data"
     t.integer  "project_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string   "version"
-    t.integer  "status",      :default => 0, :null => false
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
+    t.integer  "action"
+    t.integer  "author_id"
   end
 
   create_table "issues", :force => true do |t|
@@ -30,33 +30,53 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
     t.integer  "assignee_id"
     t.integer  "author_id"
     t.integer  "project_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.boolean  "closed",      :default => false, :null => false
-    t.integer  "position",    :default => 0
-    t.boolean  "critical",    :default => false, :null => false
+    t.datetime "created_at",                      :null => false
+    t.datetime "updated_at",                      :null => false
+    t.boolean  "closed",       :default => false, :null => false
+    t.integer  "position",     :default => 0
+    t.boolean  "critical",     :default => false, :null => false
     t.string   "branch_name"
+    t.text     "description"
+    t.integer  "milestone_id"
   end
 
+  add_index "issues", ["project_id"], :name => "index_issues_on_project_id"
+
   create_table "keys", :force => true do |t|
-    t.integer  "user_id",    :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer  "user_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
     t.text     "key"
     t.string   "title"
     t.string   "identifier"
+    t.integer  "project_id"
   end
 
   create_table "merge_requests", :force => true do |t|
-    t.string   "target_branch",                    :null => false
-    t.string   "source_branch",                    :null => false
-    t.integer  "project_id",                       :null => false
+    t.string   "target_branch",                                          :null => false
+    t.string   "source_branch",                                          :null => false
+    t.integer  "project_id",                                             :null => false
     t.integer  "author_id"
     t.integer  "assignee_id"
     t.string   "title"
-    t.boolean  "closed",        :default => false, :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.boolean  "closed",                              :default => false, :null => false
+    t.datetime "created_at",                                             :null => false
+    t.datetime "updated_at",                                             :null => false
+    t.text     "st_commits",    :limit => 2147483647
+    t.text     "st_diffs",      :limit => 2147483647
+    t.boolean  "merged",                              :default => false, :null => false
+  end
+
+  add_index "merge_requests", ["project_id"], :name => "index_merge_requests_on_project_id"
+
+  create_table "milestones", :force => true do |t|
+    t.string   "title",                          :null => false
+    t.integer  "project_id",                     :null => false
+    t.text     "description"
+    t.date     "due_date"
+    t.boolean  "closed",      :default => false, :null => false
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
   end
 
   create_table "notes", :force => true do |t|
@@ -64,21 +84,37 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
     t.string   "noteable_id"
     t.string   "noteable_type"
     t.integer  "author_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
     t.integer  "project_id"
     t.string   "attachment"
+    t.string   "line_code"
   end
+
+  add_index "notes", ["noteable_id"], :name => "index_notes_on_noteable_id"
+  add_index "notes", ["noteable_type"], :name => "index_notes_on_noteable_type"
 
   create_table "projects", :force => true do |t|
     t.string   "name"
     t.string   "path"
     t.text     "description"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.boolean  "private_flag", :default => true, :null => false
+    t.datetime "created_at",                                   :null => false
+    t.datetime "updated_at",                                   :null => false
+    t.boolean  "private_flag",           :default => true,     :null => false
     t.string   "code"
     t.integer  "owner_id"
+    t.string   "default_branch",         :default => "master", :null => false
+    t.boolean  "issues_enabled",         :default => true,     :null => false
+    t.boolean  "wall_enabled",           :default => true,     :null => false
+    t.boolean  "merge_requests_enabled", :default => true,     :null => false
+    t.boolean  "wiki_enabled",           :default => true,     :null => false
+  end
+
+  create_table "protected_branches", :force => true do |t|
+    t.integer  "project_id", :null => false
+    t.string   "name",       :null => false
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "snippets", :force => true do |t|
@@ -86,8 +122,8 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
     t.text     "content"
     t.integer  "author_id",  :null => false
     t.integer  "project_id", :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
     t.string   "file_name"
     t.datetime "expires_at"
   end
@@ -120,8 +156,8 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
     t.datetime "last_sign_in_at"
     t.string   "current_sign_in_ip"
     t.string   "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                                               :null => false
+    t.datetime "updated_at",                                               :null => false
     t.string   "name"
     t.boolean  "admin",                                 :default => false, :null => false
     t.integer  "projects_limit",                        :default => 10
@@ -129,6 +165,10 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
     t.string   "linkedin",                              :default => "",    :null => false
     t.string   "twitter",                               :default => "",    :null => false
     t.string   "authentication_token"
+    t.boolean  "dark_scheme",                           :default => false, :null => false
+    t.integer  "theme_id",                              :default => 1,     :null => false
+    t.string   "bio"
+    t.boolean  "blocked",                               :default => false, :null => false
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true
@@ -137,11 +177,26 @@ ActiveRecord::Schema.define(:version => 20111127155345) do
   create_table "users_projects", :force => true do |t|
     t.integer  "user_id",                       :null => false
     t.integer  "project_id",                    :null => false
-    t.boolean  "read",       :default => false
-    t.boolean  "write",      :default => false
-    t.boolean  "admin",      :default => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                    :null => false
+    t.datetime "updated_at",                    :null => false
+    t.integer  "project_access", :default => 0, :null => false
+  end
+
+  create_table "web_hooks", :force => true do |t|
+    t.string   "url"
+    t.integer  "project_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  create_table "wikis", :force => true do |t|
+    t.string   "title"
+    t.text     "content"
+    t.integer  "project_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+    t.string   "slug"
+    t.integer  "user_id"
   end
 
 end

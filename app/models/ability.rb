@@ -5,6 +5,7 @@ class Ability
     when "Issue" then issue_abilities(object, subject)
     when "Note" then note_abilities(object, subject)
     when "Snippet" then snippet_abilities(object, subject)
+    when "MergeRequest" then merge_request_abilities(object, subject)
     else []
     end
   end
@@ -14,29 +15,42 @@ class Ability
 
     rules << [
       :read_project,
+      :read_wiki,
       :read_issue,
+      :read_milestone,
       :read_snippet,
       :read_team_member,
       :read_merge_request,
-      :read_note
-    ] if project.readers.include?(user)
-
-    rules << [
+      :read_note,
       :write_project,
       :write_issue,
-      :write_snippet,
-      :write_merge_request,
       :write_note
-    ] if project.writers.include?(user)
+    ] if project.guest_access_for?(user)
 
     rules << [
+      :download_code,
+      :write_merge_request,
+      :write_snippet
+    ] if project.report_access_for?(user)
+
+    rules << [
+      :write_wiki
+    ] if project.dev_access_for?(user)
+
+    rules << [
+      :modify_issue,
+      :modify_snippet,
+      :modify_merge_request,
       :admin_project,
       :admin_issue,
+      :admin_milestone,
       :admin_snippet,
       :admin_team_member,
       :admin_merge_request,
-      :admin_note
-    ] if project.admins.include?(user)
+      :admin_note,
+      :admin_wiki
+    ] if project.master_access_for?(user) || project.owner == user
+
 
     rules.flatten
   end
@@ -48,7 +62,14 @@ class Ability
           [
             :"read_#{name}",
             :"write_#{name}",
+            :"modify_#{name}",
             :"admin_#{name}"
+          ]
+        elsif subject.respond_to?(:assignee) && subject.assignee == user
+          [
+            :"read_#{name}",
+            :"write_#{name}",
+            :"modify_#{name}",
           ]
         else
           subject.respond_to?(:project) ?

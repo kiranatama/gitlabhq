@@ -1,10 +1,11 @@
-- content_for(:body_class, "new-project-page")
-- content_for(:page_title) do
-  .new-project-hodler
-    .container
-      %h2.icon  
-        %span
-        New Project
+.project_new_holder
+  %h3 New Project
+  %hr
+  = render 'form'
+%div.ajax_loader.hide
+  %center
+    %div.padded= image_tag "ajax_loader.gif"
+    %h3.prepend-top Creating project &amp; repository. Please wait for few minutes
 
-      %div.clear
-      = render 'form'
+:javascript
+  $(function(){ new Projects(); });

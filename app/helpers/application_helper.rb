@@ -1,13 +1,22 @@
 require 'digest/md5'
 module ApplicationHelper
 
-  def gravatar_icon(user_email)
+  def gravatar_icon(user_email, size = 40)
     gravatar_host = request.ssl? ? "https://secure.gravatar.com" :  "http://www.gravatar.com"
-    "#{gravatar_host}/avatar/#{Digest::MD5.hexdigest(user_email)}?s=40&d=identicon"
+    user_email.strip!
+    "#{gravatar_host}/avatar/#{Digest::MD5.hexdigest(user_email.downcase)}?s=#{size}&d=identicon"
   end
 
   def fixed_mode?
     true
+  end
+
+  def request_protocol
+    request.ssl? ? "https" : "http"
+  end
+
+  def web_app_url
+    "#{request_protocol}://#{GIT_HOST["host"]}/"
   end
 
   def body_class(default_class = nil)
@@ -48,11 +57,18 @@ module ApplicationHelper
 
   def grouped_options_refs(destination = :tree)
     options = [
-      ["Branch", @repo.heads.map(&:name) ],
+      ["Branch", @project.repo.heads.map(&:name) ],
       [ "Tag", @project.tags ]
     ]
 
-    grouped_options_for_select(options, @ref)
+    # If reference is commit id - 
+    # we should add it to branch/tag selectbox
+    if(@ref && !options.flatten.include?(@ref) &&
+       @ref =~ /^[0-9a-zA-Z]{6,52}$/)
+      options << ["Commit", [@ref]]
+    end
+
+    grouped_options_for_select(options, @ref || @project.default_branch)
   end
 
   def markdown(text)
@@ -71,15 +87,50 @@ module ApplicationHelper
 
     if @project && !@project.new_record?
       project_nav = [
-        { :label => "#{@project.code} / Issues", :url => project_issues_path(@project) },
-        { :label => "#{@project.code} / Wall", :url => wall_project_path(@project) },
-        { :label => "#{@project.code} / Tree", :url => tree_project_ref_path(@project, @project.root_ref) },
-        { :label => "#{@project.code} / Commits", :url => project_commits_path(@project) },
-        { :label => "#{@project.code} / Team", :url => team_project_path(@project) }
+        { :label => "#{@project.name} / Issues", :url => project_issues_path(@project) },
+        { :label => "#{@project.name} / Wall", :url => wall_project_path(@project) },
+        { :label => "#{@project.name} / Tree", :url => tree_project_ref_path(@project, @project.root_ref) },
+        { :label => "#{@project.name} / Commits", :url => project_commits_path(@project) },
+        { :label => "#{@project.name} / Team", :url => team_project_path(@project) }
       ]
     end
 
     [projects, default_nav, project_nav].flatten.to_json
   end
 
+  def project_layout
+    layout == "project"
+  end
+
+  def admin_layout
+    layout == "admin"
+  end
+
+  def profile_layout
+    layout == "profile"
+  end
+
+  def help_layout
+    controller.controller_name == "help" 
+  end
+
+  def ldap_enable?
+    Devise.omniauth_providers.include?(:ldap)
+  end
+
+  def layout 
+    controller.send :_layout
+  end
+
+  def app_theme
+    if current_user && current_user.theme_id == 1
+      "ui_basic"
+    else
+      "ui_mars"
+    end
+  end
+
+  def string_to_utf8 str
+    Gitlabhq::Encode.utf8 str
+  end
 end

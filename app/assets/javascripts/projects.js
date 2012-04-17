@@ -1,58 +1,14 @@
-$(document).ready(function(){
-  $('#tree-slider td.tree-item-file-name a, #tree-breadcrumbs a').live("click", function() {
-    history.pushState({ path: this.path }, '', this.href)
-  })
-
-  $("#tree-slider tr.tree-item").live('click', function(e){
-    if(e.target.nodeName != "A") {
-      e.stopPropagation();
-      link = $(this).find("td.tree-item-file-name a")
-      link.click();
-      return false;
-    }
+function Projects() { 
+  $("#project_name").live("change", function(){
+    var slug = slugify($(this).val());
+    $("#project_code").val(slug);
+    $("#project_path").val(slug);
   });
 
-  $("#projects-list .project").live('click', function(e){
-    if(e.target.nodeName != "A" && e.target.nodeName != "INPUT") {
-      location.href = $(this).attr("url");
-      e.stopPropagation();
-      return false;
-    }
+  $('.new_project, .edit_project').live('ajax:before', function() {
+    $('.project_new_holder, .project_edit_holder').hide();
+    $('.ajax_loader').show();
   });
 
-  $("#issues-table .issue").live('click', function(e){
-    if(e.target.nodeName != "A" && e.target.nodeName != "INPUT") {
-      location.href = $(this).attr("url");
-      e.stopPropagation();
-      return false;
-    }
-  });
-
-  $(document).keypress(function(e) {
-    if( $(e.target).is(":input") ) return;
-    switch(e.which)  {
-      case 115:  focusSearch();
-        e.preventDefault();
-    }
-  });
-
-});
-
-function focusSearch() {
-  $("#search").focus();
+  $('form #project_default_branch').chosen();
 }
-
-function taggifyForm(){
-  var tag_field = $('#tag_field').tagify();
-
-  tag_field.tagify('inputField').autocomplete({
-      source: '/tags.json'
-  });
-
-  $('form').submit( function() {
-    var tag_field = $('#tag_field')
-       tag_field.val( tag_field.tagify('serialize') );
-       return true;
-  });
-}
-

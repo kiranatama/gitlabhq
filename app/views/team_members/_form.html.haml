@@ -1,25 +1,33 @@
-%div
-  = form_for @team_member, :as => :team_member, :url => project_team_members_path(@project, @team_member), :remote => "true" do |f|
-    -if @team_member.errors.any?
+%h3= "New Team member"
+%hr
+= form_for @team_member, :as => :team_member, :url => project_team_members_path(@project, @team_member) do |f|
+  -if @team_member.errors.any?
+    .alert-message.block-message.error
       %ul
         - @team_member.errors.full_messages.each do |msg|
           %li= msg
 
-    .span-6.append-bottom
-      %b Name
-    .span-6
-      = f.select(:user_id, User.not_in_project(@project).all.collect {|p| [ p.name, p.id ] }, { :include_blank => "Select user" })
-    .span-6
-      %b Access:
-    .span-6
-      = f.check_box :read
-      Web Access
-    .span-6
-      = f.check_box :write
-      Git Access
-    .span-6.append-bottom
-      = f.check_box :admin
-      Admin
-    %br
-    .span-6
-      = f.submit 'Save', :class => "grey-button"
+  .clearfix
+    = f.label :user_id, "Name"
+    .input= f.select(:user_id, User.not_in_project(@project).all.collect {|p| [ p.name, p.id ] }, { :include_blank => "Select user" }, { :style => "width:300px" })
+
+
+  .clearfix
+    = f.label :project_access, "Project Access"
+    .input= f.select :project_access, options_for_select(Project.access_options, @team_member.project_access), {}, :class => "project-access-select"
+
+
+  .actions
+    = f.submit 'Save', :class => "btn primary"
+    = link_to "Cancel", team_project_path(@project), :class => "btn"
+
+:css
+  form select { 
+    width:300px;
+  }
+
+:javascript
+  $('select#team_member_user_id').chosen();
+  $('select#team_member_project_access').chosen();
+  //$('select#team_member_repo_access').chosen();
+  //$('select#team_member_project_access').chosen();

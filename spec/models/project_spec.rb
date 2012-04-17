@@ -3,10 +3,16 @@ require 'spec_helper'
 describe Project do
   describe "Associations" do
     it { should have_many(:users) }
-    it { should have_many(:users_projects) }
-    it { should have_many(:issues) }
-    it { should have_many(:notes) }
-    it { should have_many(:snippets) }
+    it { should have_many(:protected_branches).dependent(:destroy) }
+    it { should have_many(:events).dependent(:destroy) }
+    it { should have_many(:wikis).dependent(:destroy) }
+    it { should have_many(:merge_requests).dependent(:destroy) }
+    it { should have_many(:users_projects).dependent(:destroy) }
+    it { should have_many(:issues).dependent(:destroy) }
+    it { should have_many(:notes).dependent(:destroy) }
+    it { should have_many(:snippets).dependent(:destroy) }
+    it { should have_many(:web_hooks).dependent(:destroy) }
+    it { should have_many(:deploy_keys).dependent(:destroy) }
   end
 
   describe "Validation" do
@@ -16,14 +22,11 @@ describe Project do
   end
 
   describe "Respond to" do
-    it { should respond_to(:readers) }
-    it { should respond_to(:writers) }
-    it { should respond_to(:gitosis_writers) }
-    it { should respond_to(:admins) }
+    it { should respond_to(:repository_writers) }
     it { should respond_to(:add_access) }
     it { should respond_to(:reset_access) }
-    it { should respond_to(:update_gitosis_project) }
-    it { should respond_to(:destroy_gitosis_project) }
+    it { should respond_to(:update_repository) }
+    it { should respond_to(:destroy_repository) }
     it { should respond_to(:public?) }
     it { should respond_to(:private?) }
     it { should respond_to(:url_to_repo) }
@@ -33,11 +36,12 @@ describe Project do
     it { should respond_to(:repo) }
     it { should respond_to(:tags) }
     it { should respond_to(:commit) }
+    it { should respond_to(:commits_between) }
   end
 
-  it "should not allow 'gitosis-admin' as repo name" do
+  it "should not allow 'gitolite-admin' as repo name" do
     should allow_value("blah").for(:path)
-    should_not allow_value("gitosis-admin").for(:path)
+    should_not allow_value("gitolite-admin").for(:path)
   end
 
   it "should return valid url to repo" do
@@ -48,6 +52,11 @@ describe Project do
   it "should return path to repo" do
     project = Project.new(:path => "somewhere")
     project.path_to_repo.should == File.join(Rails.root, "tmp", "tests", "somewhere")
+  end
+
+  it "returns the full web URL for this repo" do
+    project = Project.new(:code => "somewhere")
+    project.web_url.should == "#{GIT_HOST['host']}/somewhere"
   end
 
   describe :valid_repo? do
@@ -62,49 +71,37 @@ describe Project do
     end
   end
 
-  describe "updates" do
-    let(:project) { Factory :project }
-
-    before do
-      @issue = Factory :issue,
-        :project => project,
-        :author => Factory(:user),
-        :assignee => Factory(:user)
-
-      @note = Factory :note,
-        :project => project,
-        :author => Factory(:user)
-
-      @commit = project.fresh_commits(1).first
-    end
-
-    describe "return commit, note & issue" do
-      it { project.updates(3).count.should == 3 }
-      it { project.updates(3).last.id.should == @commit.id }
-      it { project.updates(3).include?(@issue).should be_true }
-      it { project.updates(3).include?(@note).should be_true }
-    end
-  end
-
   describe "last_activity" do
     let(:project) { Factory :project }
 
     before do
-      @note = Factory :note,
-        :project => project,
-        :author => Factory(:user)
+      @issue = Factory :issue, :project => project
     end
 
-    it { project.last_activity.should == @note }
-    it { project.last_activity_date.to_s.should == @note.created_at.to_s }
+    it { project.last_activity.should == Event.last }
+    it { project.last_activity_date.to_s.should == Event.last.created_at.to_s }
   end
 
   describe "fresh commits" do
     let(:project) { Factory :project }
 
     it { project.fresh_commits(3).count.should == 3 }
-    it { project.fresh_commits.first.id.should == "2fb376f61875b58bceee0492e270e9c805294b1a" }
-    it { project.fresh_commits.last.id.should == "0dac878dbfe0b9c6104a87d65fe999149a8d862c" }
+    it { project.fresh_commits.first.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
+    it { project.fresh_commits.last.id.should == "f403da73f5e62794a0447aca879360494b08f678" }
+  end
+
+  describe "commits_between" do
+    let(:project) { Factory :project }
+
+    subject do
+      commits = project.commits_between("3a4b4fb4cde7809f033822a171b9feae19d41fff",
+                                        "8470d70da67355c9c009e4401746b1d5410af2e3")
+      commits.map { |c| c.id }
+    end
+
+    it { should have(3).elements }
+    it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
+    it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
   end
 
   describe "Git methods" do
@@ -163,19 +160,52 @@ describe Project do
       end
     end
   end
+
+  describe :update_merge_requests do 
+    let(:project) { Factory :project }
+
+    before do
+      @merge_request = Factory :merge_request,
+        :project => project,
+        :merged => false,
+        :closed => false
+      @key = Factory :key, :user_id => project.owner.id
+    end
+
+    it "should close merge request if last commit from source branch was pushed to target branch" do
+      @merge_request.reloaded_commits
+      @merge_request.last_commit.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a"
+      project.update_merge_requests("8716fc78f3c65bbf7bcf7b574febd583bc5d2812", "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a", "refs/heads/stable", @key.user)
+      @merge_request.reload
+      @merge_request.merged.should be_true
+      @merge_request.closed.should be_true
+    end
+
+    it "should update merge request commits with new one if pushed to source branch" do 
+      @merge_request.last_commit.should == nil
+      project.update_merge_requests("8716fc78f3c65bbf7bcf7b574febd583bc5d2812", "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a", "refs/heads/master", @key.user)
+      @merge_request.reload
+      @merge_request.last_commit.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a"
+    end
+  end
 end
 # == Schema Information
 #
 # Table name: projects
 #
-#  id           :integer         not null, primary key
-#  name         :string(255)
-#  path         :string(255)
-#  description  :text
-#  created_at   :datetime
-#  updated_at   :datetime
-#  private_flag :boolean         default(TRUE), not null
-#  code         :string(255)
-#  owner_id     :integer
+#  id                     :integer         not null, primary key
+#  name                   :string(255)
+#  path                   :string(255)
+#  description            :text
+#  created_at             :datetime
+#  updated_at             :datetime
+#  private_flag           :boolean         default(TRUE), not null
+#  code                   :string(255)
+#  owner_id               :integer
+#  default_branch         :string(255)     default("master"), not null
+#  issues_enabled         :boolean         default(TRUE), not null
+#  wall_enabled           :boolean         default(TRUE), not null
+#  merge_requests_enabled :boolean         default(TRUE), not null
+#  wiki_enabled           :boolean         default(TRUE), not null
 #
 

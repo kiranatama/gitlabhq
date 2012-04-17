@@ -16,22 +16,24 @@ describe "Issues" do
     it { should have_content(@key.title) }
 
     describe "Destroy" do
+      before { visit key_path(@key) }
+
       it "should remove entry" do
         expect {
-          click_link "destroy_key_#{@key.id}"
+          click_link "Remove"
         }.to change { @user.keys.count }.by(-1)
       end
     end
   end
 
-  describe "New key", :js => true do
+  describe "New key" do
     before do
       visit keys_path
       click_link "Add new"
     end
 
     it "should open new key popup" do
-      page.should have_content("Add new public key")
+      page.should have_content("New key")
     end
 
     describe "fill in" do
@@ -45,10 +47,19 @@ describe "Issues" do
       it "should add new key to table" do
         click_button "Save"
 
-        page.should_not have_content("Add new public key")
+        page.should_not have_content("New key")
         page.should have_content "laptop"
-        page.should have_content "publickey234="
       end
     end
+  end
+
+  describe "Show page" do 
+    before do
+      @key = Factory :key, :user => @user
+      visit key_path(@key) 
+    end
+    
+    it { page.should have_content @key.title }
+    it { page.should have_content @key.key[0..10] }
   end
 end

@@ -3,17 +3,23 @@ class NotesController < ApplicationController
 
   # Authorize
   before_filter :add_project_abilities
+
+  before_filter :authorize_read_note!
   before_filter :authorize_write_note!, :only => [:create]
 
   respond_to :js
 
+  def index
+    notes
+    respond_with(@notes)
+  end
+
   def create
     @note = @project.notes.new(params[:note])
     @note.author = current_user
-
-    if @note.save
-      notify if params[:notify] == '1'
-    end
+    @note.notify = true if params[:notify] == '1'
+    @note.notify_author = true if params[:notify_author] == '1'
+    @note.save
 
     respond_to do |format|
       format.html {redirect_to :back}
@@ -23,9 +29,7 @@ class NotesController < ApplicationController
 
   def destroy
     @note = @project.notes.find(params[:id])
-
     return access_denied! unless can?(current_user, :admin_note, @note)
-
     @note.destroy
 
     respond_to do |format|
@@ -33,22 +37,28 @@ class NotesController < ApplicationController
     end
   end
 
-  protected
+  protected 
 
-  def notify
-    @project.users.reject { |u| u.id == current_user.id } .each do |u|
-      case @note.noteable_type
-      when "Commit" then
-        Notify.note_commit_email(u, @note).deliver
-      when "Issue" then
-        Notify.note_issue_email(u, @note).deliver
-      when "MergeRequest"
-        true # someone should write email notification
-      when "Snippet"
-        true
-      else
-        Notify.note_wall_email(u, @note).deliver
-      end
-    end
+  def notes
+    @notes = case params[:target_type]
+             when "commit" 
+               then project.commit_notes(project.commit((params[:target_id]))).fresh.limit(20)
+             when "snippet"
+               then  project.snippets.find(params[:target_id]).notes
+             when "wall"
+               then project.common_notes.order("created_at DESC").fresh.limit(50)
+             when "issue"
+               then project.issues.find(params[:target_id]).notes.inc_author.order("created_at DESC").limit(20)
+             when "merge_request"
+               then project.merge_requests.find(params[:target_id]).notes.inc_author.order("created_at DESC").limit(20)
+             end
+
+    @notes = if params[:last_id]
+               @notes.where("id > ?", params[:last_id])
+             elsif params[:first_id]
+               @notes.where("id < ?", params[:first_id])
+             else 
+               @notes
+             end
   end
 end

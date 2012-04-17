@@ -1,55 +1,59 @@
-$(document).ready(function(){
-  $(".day-commits-table li.commit").live('click', function(e){
-    if(e.target.nodeName != "A") {
-      location.href = $(this).attr("url");
-      e.stopPropagation();
-      return false;
-    }
-  });
-});
-
 var CommitsList = {
+  ref:null,
+  limit:0,
+  offset:0,
+  disable:false,
 
-ref:null,
-limit:0,
-offset:0,
+  init:
+    function(ref, limit) {
+      $(".day-commits-table li.commit").live('click', function(e){
+        if(e.target.nodeName != "A") {
+          location.href = $(this).attr("url");
+          e.stopPropagation();
+          return false;
+        }
+      });
 
-init:
-  function(ref, limit) {
-    this.ref=ref;
-    this.limit=limit;
-    this.offset=limit;
-    this.initLoadMore();
-    $('.loading').show();
-  },
-
-getOld:
-  function() {
-    $('.loading').show();
-    $.ajax({
-      type: "GET",
-      url: location.href,
-      data: "limit=" + this.limit + "&offset=" + this.offset + "&ref=" + this.ref,
-      complete: function(){ $('.loading').hide()},
-      dataType: "script"});
-  },
-
-append:
-  function(count, html) {
-    $("#commits_list").append(html);
-    if(count > 0) {
-      this.offset += count;
+      this.ref=ref;
+      this.limit=limit;
+      this.offset=limit;
       this.initLoadMore();
-    }
-  },
+      $('.loading').show();
+    },
 
-initLoadMore:
-  function() {
-    $(window).bind('scroll', function(){
-      if($(window).scrollTop() == $(document).height() - $(window).height()){
-        $(window).unbind('scroll');
-        CommitsList.getOld();
+  getOld:
+    function() {
+      $('.loading').show();
+      $.ajax({
+        type: "GET",
+        url: location.href,
+        data: "limit=" + this.limit + "&offset=" + this.offset + "&ref=" + this.ref,
+        complete: function(){ $('.loading').hide()},
+        dataType: "script"});
+    },
+
+  append:
+    function(count, html) {
+      $("#commits_list").append(html);
+      if(count > 0) {
+        this.offset += count;
+      } else { 
+        this.disable = true;
       }
-    });
-  }
+    },
+
+  initLoadMore:
+    function() {
+      $(document).endlessScroll({
+        bottomPixels: 400,
+        fireDelay: 1000,
+        fireOnce:true,
+        ceaseFire: function() { 
+          return CommitsList.disable;
+        },
+        callback: function(i) {
+          CommitsList.getOld();
+        }
+      });
+    }
 }

@@ -13,6 +13,8 @@ class Note < ActiveRecord::Base
            :prefix => true
 
   attr_protected :author, :author_id
+  attr_accessor :notify
+  attr_accessor :notify_author
 
   validates_presence_of :project
 
@@ -35,6 +37,62 @@ class Note < ActiveRecord::Base
   scope :inc_author, includes(:author)
 
   mount_uploader :attachment, AttachmentUploader
+
+  def notify
+    @notify ||= false
+  end
+
+  def notify_author
+    @notify_author ||= false
+  end
+
+  def target
+    if noteable_type == "Commit"
+      project.commit(noteable_id)
+    else
+      noteable
+    end
+  # Temp fix to prevent app crash
+  # if note commit id doesnt exist
+  rescue
+    nil
+  end
+
+  # Check if we can notify commit author
+  # with email about our comment
+  #
+  # If commit author email exist in project
+  # and commit author is not passed user we can
+  # send email to him
+  #
+  # params:
+  #   user - current user
+  #
+  # return:
+  #   Boolean
+  #
+  def notify_only_author?(user)
+    commit? && commit_author &&
+      commit_author.email != user.email
+  end
+
+  def commit?
+    noteable_type == "Commit"
+  end
+
+  def commit_author
+    @commit_author ||=
+      project.users.find_by_email(target.author_email) ||
+      project.users.find_by_name(target.author_name)
+  rescue
+    nil
+  end
+
+  # Returns true if this is an upvote note,
+  # otherwise false is returned
+  def upvote?
+    note =~ /^\+1/ ? true : false
+  end
 end
 # == Schema Information
 #
@@ -49,5 +107,6 @@ end
 #  updated_at    :datetime
 #  project_id    :integer
 #  attachment    :string(255)
+#  line_code     :string(255)
 #
 

@@ -23,7 +23,7 @@ describe "Issues" do
 
     subject { page }
 
-    it { should have_content(@issue.title) }
+    it { should have_content(@issue.title[0..20]) }
     it { should have_content(@issue.project.name) }
     it { should have_content(@issue.assignee.name) }
 
@@ -46,22 +46,7 @@ describe "Issues" do
       page.body.should have_selector("entry summary", :text => @issue.title)
     end
 
-    describe "Destroy" do
-      before do
-        # admin access to remove issue
-        @user.users_projects.destroy_all
-        project.add_access(@user, :read, :write, :admin)
-        visit project_issues_path(project)
-      end
-
-      it "should remove entry" do
-        expect {
-          click_link "destroy_issue_#{@issue.id}"
-        }.to change { Issue.count }.by(-1)
-      end
-    end
-
-    describe "statuses", :js => true do
+    describe "statuses" do
       before do
         @closed_issue = Factory :issue,
           :author => @user,
@@ -76,13 +61,13 @@ describe "Issues" do
       end
 
       it "should show only closed" do
-        choose "closed_issues"
+        click_link "Closed"
         should have_no_content(@issue.title)
         should have_content(@closed_issue.title[0..25])
       end
 
       it "should show all" do
-        choose "all_issues"
+        click_link "All"
         should have_content(@issue.title[0..25])
         should have_content(@closed_issue.title[0..25])
       end
@@ -96,7 +81,7 @@ describe "Issues" do
     end
 
     it "should open new issue form" do
-      page.should have_content("New issue")
+      page.should have_content("New Issue")
     end
 
     describe "fill in" do
@@ -107,10 +92,10 @@ describe "Issues" do
           select @user.name, :from => "issue_assignee_id" 
         end
 
-        it { expect { click_button "Save" }.to change {Issue.count}.by(1) }
+        it { expect { click_button "Submit new issue" }.to change {Issue.count}.by(1) }
 
         it "should add new issue to table" do
-          click_button "Save"
+          click_button "Submit new issue"
 
           page.should_not have_content("Add new issue")
           page.should have_content @user.name
@@ -120,7 +105,7 @@ describe "Issues" do
 
         it "should call send mail" do
           Notify.should_not_receive(:new_issue_email)
-          click_button "Save"
+          click_button "Submit new issue"
         end
       end
 
@@ -131,10 +116,10 @@ describe "Issues" do
           select @user2.name, :from => "issue_assignee_id" 
         end
 
-        it { expect { click_button "Save" }.to change {Issue.count}.by(1) }
+        it { expect { click_button "Submit new issue" }.to change {Issue.count}.by(1) }
 
         it "should add new issue to table" do
-          click_button "Save"
+          click_button "Submit new issue"
 
           page.should_not have_content("Add new issue")
           page.should have_content @user2.name
@@ -144,16 +129,15 @@ describe "Issues" do
 
         it "should call send mail" do
           Notify.should_receive(:new_issue_email).and_return(stub(:deliver => true))
-          click_button "Save"
+          click_button "Submit new issue"
         end
 
-        it "should send valid email to user with email & password" do
-          click_button "Save"
+        it "should send valid email to user" do
+          click_button "Submit new issue"
           issue = Issue.last
           email = ActionMailer::Base.deliveries.last
           email.subject.should have_content("New Issue was created")
           email.body.should have_content(issue.title)
-          email.body.should have_content(issue.assignee.name)
         end
 
       end
@@ -183,7 +167,6 @@ describe "Issues" do
         :assignee => @user,
         :project => project
       visit project_issues_path(project)
-      page.execute_script("$('.action-links').css('display', 'block');")
       click_link "Edit"
     end
 
@@ -194,14 +177,14 @@ describe "Issues" do
     describe "fill in" do
       before do
         fill_in "issue_title", :with => "bug 345"
+        fill_in "issue_description", :with => "bug description"
       end
 
-      it { expect { click_button "Save" }.to_not change {Issue.count} }
+      it { expect { click_button "Save changes" }.to_not change {Issue.count} }
 
       it "should update issue fields" do
-        click_button "Save"
+        click_button "Save changes"
 
-        page.should_not have_content("Issue ##{@issue.id}")
         page.should have_content @user.name
         page.should have_content "bug 345"
         page.should have_content project.name
@@ -227,7 +210,7 @@ describe "Issues" do
       @issue.save
 
       visit project_issues_path(project)
-      choose 'closed_issues'
+      click_link 'Closed'
       fill_in 'issue_search', :with => 'foobar'
 
       page.should have_content 'foobar'

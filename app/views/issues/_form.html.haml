@@ -1,45 +1,56 @@
 %div.issue-form-holder
-  .issue-show-holder.ui-box
-    %h3
-      = @issue.new_record? ? "New issue" : "Edit Issue ##{@issue.id}"
-      - unless @issue.new_record?
-        .right
-          - if @issue.closed
-            %span.tag.high Resolved
-          - else 
-            %span.tag.today Open
-    = form_for [@project, @issue], :remote => "true" do |f|
-      .data
-        %table.no-borders
-          -if @issue.errors.any?
-            %tr 
-              %td Errors
-              %td
-                #error_explanation
-                  - @issue.errors.full_messages.each do |msg|
-                    %span= msg
-                    %br
+  %h3= @issue.new_record? ? "New Issue" : "Edit Issue ##{@issue.id}"
+  - unless request.xhr?
+    .back_link
+      = link_to project_issue_path(@project, @issue) do 
+        &larr; back to show page
+  = form_for [@project, @issue], :remote => request.xhr? do |f|
+    -if @issue.errors.any?
+      .alert-message.block-message.error
+        %ul
+          - @issue.errors.full_messages.each do |msg|
+            %li= msg
+    .issue_form_box
+      .issue_title
+        .clearfix
+          = f.label :title, "Issue Subject *"
+          .input
+            = f.text_field :title, :maxlength => 255, :class => "xxlarge"
+      .issue_middle_block
+        .issue_assignee
+          = f.label :assignee_id, "Assign to *"
+          .input= f.select(:assignee_id, @project.users.all.collect {|p| [ p.name, p.id ] }, { :include_blank => "Assign to user" })
+        .issue_milestone
+          = f.label :milestone_id
+          .input= f.select(:milestone_id, @project.milestones.active.all.collect {|p| [ p.title, p.id ] }, { :include_blank => "Select milestone" })
 
-          %tr
-            %td= f.label :title
-            %td= f.text_area :title, :style => "width:450px; height:100px", :maxlength => 255
+      .issue_description
+        .clearfix
+          = f.label :critical, "Critical"
+          .input= f.check_box :critical
+        
+        - unless @issue.new_record?
+          .clearfix
+            = f.label :closed
+            .input= f.check_box :closed
+        .clearfix
+          = f.label :description, "Issue Details"
+          .input
+            = f.text_area :description, :maxlength => 2000, :class => "xxlarge", :rows => 14
+            %p.hint Markdown is enabled.
 
-          %tr
-            %td= f.label :assignee_id
-            %td= f.select(:assignee_id, @project.users.all.collect {|p| [ p.name, p.id ] }, { :include_blank => "Select user" })
 
-          %tr
-            %td= f.label :critical, "Critical"
-            %td= f.check_box :critical
-          
-          - unless @issue.new_record?
-            %tr
-              %td= f.label :closed
-              %td= f.check_box :closed
-      .buttons 
-        = f.submit 'Save', :class => "grey-button"
-        .right
-          - if request.xhr? 
-            = link_to_function "Back", "backToIssues();", :class => "grey-button"
-          - else 
-            = link_to "Back", [@project, @issue], :class => "grey-button"
+
+    .actions
+      - if @issue.new_record?
+        = f.submit 'Submit new issue', :class => "primary btn"
+      -else
+        = f.submit 'Save changes', :class => "primary btn"
+
+      - if request.xhr?
+        = link_to "Cancel", "#back", :onclick => "backToIssues();", :class => "btn" 
+      - else 
+        - if @issue.new_record?
+          = link_to "Cancel", project_issues_path(@project), :class => "btn"
+        - else    
+          = link_to "Cancel", project_issue_path(@project, @issue), :class => "btn"

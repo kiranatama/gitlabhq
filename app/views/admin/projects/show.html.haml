@@ -1,10 +1,9 @@
-- unless notice.nil?
-  %p#notice= notice
+%h3
+  = @admin_project.name
+  = link_to 'Edit', edit_admin_project_path(@admin_project), :class => "btn right small"
 
-
-%h2= @admin_project.name
-
-%table.round-borders
+%br
+%table.zebra-striped.table-bordered
   %tr
     %td
       %b
@@ -29,32 +28,60 @@
         Description:
     %td
       = @admin_project.description
-  %tr
-    %td{:colspan => 2}
-      = link_to 'Edit', edit_admin_project_path(@admin_project), :class => "grey-button"
+%br
+%h3
+  Team
+  %small
+    (#{@admin_project.users_projects.count})
+%br
+%table.zebra-striped.table-bordered
+  %thead
+    %tr
+      %th Name
+      %th Project Access
+      %th Repository Access
+      %th
 
+  - @admin_project.users_projects.each do |tm|
+    %tr
+      %td
+        = link_to tm.user_name, admin_user_path(tm.user)
+      %td= select_tag :tm_project_access, options_for_select(Project.access_options, tm.project_access), :class => "medium project-access-select", :disabled => :disabled
+      %td= link_to 'Edit Access', edit_admin_team_member_path(tm), :class => "btn small"
+      %td= link_to 'Remove from team', admin_team_member_path(tm), :confirm => 'Are you sure?', :method => :delete, :class => "btn danger small"
 
-.span-14
-
-  %h2 Team
-
-  %table.round-borders
+%br
+%h3 Add new team member
+%br
+= form_tag team_update_admin_project_path(@admin_project), :class => "bulk_import", :method => :put  do 
+  %table.zebra-striped.table-bordered
     %thead
       %tr
-        %th Name
-        %th Added
-        %th Web
-        %th Git
-        %th Admin
-        %th
+        %th Users
+        %th Project Access:
 
-    - @admin_project.users_projects.each do |tm|
-      %tr
-        %td= link_to tm.user_name, admin_team_member_path(tm)
-        %td= time_ago_in_words(tm.updated_at) + " ago"
-        %td= check_box_tag "read",   1, @admin_project.readers.include?(tm.user), :disabled => :disabled
-        %td= check_box_tag "commit", 1, @admin_project.writers.include?(tm.user), :disabled => :disabled
-        %td.span-2= check_box_tag "admin",  1, @admin_project.admins.include?(tm.user), :disabled => :disabled
-        %td= link_to 'Destroy', admin_team_member_path(tm), :confirm => 'Are you sure?', :method => :delete
+    %tr
+      %td= select_tag :user_ids, options_from_collection_for_select(@users , :id, :name),  :multiple => true
+      %td= select_tag :project_access, options_for_select(Project.access_options), :class => "project-access-select"
 
-  = link_to 'New Team Member', new_admin_team_member_path(:team_member => {:project_id => @admin_project.id}),  :class => "grey-button"
+    %tr
+      %td= submit_tag 'Add', :class => "btn primary"
+      %td
+        Read more about project permissions 
+        %strong= link_to "here", help_permissions_path, :class => "vlink"
+
+:css 
+  form select { 
+    width:150px;
+  }
+
+  #user_ids {
+    width:300px;
+  }
+
+  
+:javascript 
+  $('select#user_ids').chosen();
+  $('select#repo_access').chosen();
+  $('select#project_access').chosen();
+

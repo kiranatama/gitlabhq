@@ -2,48 +2,62 @@
   = form_for [:admin, @admin_user] do |f|
     -if @admin_user.errors.any?
       #error_explanation
-        %h2= "#{pluralize(@admin_user.errors.count, "error")} prohibited this admin_user from being saved:"
         %ul
           - @admin_user.errors.full_messages.each do |msg|
             %li= msg
 
-    .form-row
-      = f.label :name
-      %br
-      = f.text_field :name
-    .form-row
-      = f.label :email
-      %br
-      = f.text_field :email
-    .form-row
-      = f.label :password
-      %br
-      = f.password_field :password
-    .form-row
-      = f.label :password_confirmation
-      %br
-      = f.password_field :password_confirmation
-    .form-row
-      = f.check_box :admin
-      = f.label :admin
+    .row
+      .span6
+        .clearfix
+          = f.label :name
+          .input
+            = f.text_field :name
+            %span.help-inline * requried
+        .clearfix
+          = f.label :email
+          .input
+            = f.text_field :email
+            %span.help-inline * requried
+        .clearfix
+          = f.label :password
+          .input= f.password_field :password
+        .clearfix
+          = f.label :password_confirmation
+          .input= f.password_field :password_confirmation
+        %hr
+        .clearfix
+          = f.label :skype
+          .input= f.text_field :skype
+        .clearfix
+          = f.label :linkedin
+          .input= f.text_field :linkedin
+        .clearfix
+          = f.label :twitter
+          .input= f.text_field :twitter
+      .span6
+        .clearfix
+          = f.label :projects_limit
+          .input= f.text_field :projects_limit, :class => "small_input"
 
-    .form-row
-      = f.text_field :projects_limit, :class => "small_input"
-      = f.label :projects_limit
-
-    .form-row
-      = f.label :skype
-      %br
-      = f.text_field :skype
-    .form-row
-      = f.label :linkedin
-      %br
-      = f.text_field :linkedin
-    .form-row
-      = f.label :twitter
-      %br
-      = f.text_field :twitter
-    .clear
-    %br
+        .alert
+          .clearfix
+            %p Give user ability to manage application.
+            = f.label :admin, :class => "checkbox" do 
+              = f.check_box :admin
+              %span Administrator
+        - unless @admin_user.new_record? 
+          .alert.alert-error
+            - if @admin_user.blocked
+              %span
+                = link_to 'Unblock', unblock_admin_user_path(@admin_user), :method => :put, :class => "btn small"
+                This user is blocked and is not able to login GitLab
+            - else
+              %span
+                = link_to 'Block', block_admin_user_path(@admin_user), :confirm => 'USER WILL BE BLOCKED! Are you sure?', :method => :put, :class => "btn small danger"
+                Blocked user will removed from all projects &amp; will not be able to login to GitLab.
     .actions
-      = f.submit 'Save', :class => "grey-button"
+      = f.submit 'Save', :class => "btn primary"
+      - if @admin_user.new_record? 
+        = link_to 'Cancel', admin_users_path, :class => "btn"
+      - else 
+        = link_to 'Cancel', admin_user_path(@admin_user), :class => "btn"

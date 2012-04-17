@@ -1,59 +1,89 @@
-.merge-request-show-holder.ui-box.width-100p
-  %h3
-    = "Merge Request ##{@merge_request.id}:"
-    &nbsp;
-    .tag.commit.inline= @merge_request.source_branch
-    &rarr;
-    .tag.commit.inline= @merge_request.target_branch
-    .right
+%h3
+  = "Merge Request ##{@merge_request.id}:"
+  &nbsp;
+  %span.pretty_label.branch= @merge_request.source_branch
+  &rarr;
+  %span.pretty_label.branch= @merge_request.target_branch
+
+  %span.right
+    - if can?(current_user, :modify_merge_request, @merge_request)
+      - if @merge_request.open?
+        = link_to "Show how to merge", "#", :class => "how_to_merge_link btn small padded", :title => "How To Merge"
+        = link_to 'Close', project_merge_request_path(@project, @merge_request, :merge_request => {:closed => true }, :status_only => true), :method => :put, :class => "btn small padded", :title => "Close merge request"
+        = link_to edit_project_merge_request_path(@project, @merge_request), :class => "btn small padded" do 
+          Edit
+
+    %br
+    - if @merge_request.upvotes > 0
+      .upvotes#upvotes= "+#{pluralize @merge_request.upvotes, 'upvote'}"
+
+= render "merge_requests/how_to_merge"
+.back_link
+  = link_to project_merge_requests_path(@project) do 
+    &larr; To merge requests
+
+.main_box
+  .top_box_content
+    %h4
       - if @merge_request.closed
-        %span.tag.high Closed
+        .alert-message.error.status_info Closed
       - else 
-        %span.tag.today Open
+        .alert-message.success.status_info Open
+      = @merge_request.title
 
-  .data
-    %p= @merge_request.title
+  .middle_box_content
+    %div
+      %cite.cgray Created at #{@merge_request.created_at.stamp("Aug 21, 2011")} by 
+      = image_tag gravatar_icon(@merge_request.author_email), :width => 16, :class => "lil_av"
+      %strong.author= link_to_merge_request_author(@merge_request)
 
-    - if @merge_request.author == @merge_request.assignee
-      = image_tag gravatar_icon(@merge_request.assignee_email),  :width => 20, :style => "padding:0 5px;"
-      = @merge_request.assignee_name
-    - else 
-      = image_tag gravatar_icon(@merge_request.author_email),  :width => 20, :style => "padding:0 5px;"
-      = @merge_request.author_name
-      &rarr;
-      = image_tag gravatar_icon(@merge_request.assignee_email),  :width => 20, :style => "padding:0 5px;"
-      = @merge_request.assignee_name
-    .right
-      %cite.cgray= @merge_request.created_at.stamp("21 Aug 2011, 11:15pm")
-    .clear
+      %cite.cgray and currently assigned to 
+      = image_tag gravatar_icon(@merge_request.assignee_email), :width => 16, :class => "lil_av"
+      %strong.author= link_to_merge_request_assignee(@merge_request)
 
-  .buttons
-    - if can? current_user, :write_project, @project
-      - if @merge_request.closed
-        = link_to 'Reopen', project_merge_request_path(@project, @merge_request, :merge_request => {:closed => false }, :status_only => true), :method => :put,  :class => "grey-button"
-      - else
-        = link_to 'Close', project_merge_request_path(@project, @merge_request, :merge_request => {:closed => true }, :status_only => true), :method => :put, :class => "grey-button"
-      .right
-        = link_to 'Edit', edit_project_merge_request_path(@project, @merge_request), :class => "grey-button positive"
 
-.clear
-%br
-%br
+  - if @merge_request.closed
+    .bottom_box_content
+      - if @merge_request.merged?
+        %span
+          Merged by #{@merge_request.merge_event.author_name} 
+          %small #{time_ago_in_words(@merge_request.merge_event.created_at)} ago.
+      - elsif @merge_request.closed_event
+        %span
+          Closed by #{@merge_request.closed_event.author_name} 
+          %small #{time_ago_in_words(@merge_request.closed_event.created_at)} ago.
 
-#gitlab-tabs
-  %ul
-    %li= link_to "Notes", "#merge-notes"
-    %li= link_to "Commits", commits_project_merge_request_path(@project, @merge_request)
-    %li= link_to "Diff", diffs_project_merge_request_path(@project, @merge_request)
+= render "merge_requests/commits"
 
-  #merge-notes
-    .issue_notes= render "notes/notes"
-    .loading{ :style => "display:none;"}
-      %center= image_tag "ajax-loader.gif"
-    .clear
+- unless @commits.empty?
+  .nav.nav-tabs
+    %li.active
+      = link_to "#notes", :class => "merge-notes-tab tab" do 
+        Notes
+    %li
+      = link_to "#diffs", "data-url" => diffs_project_merge_request_path(@project, @merge_request), :class => "merge-diffs-tab tab" do
+        Diff
 
+
+.merge_request_notes#notes= render "notes/notes", :tid => @merge_request.id, :tt => "merge_request"
+
+.merge-request-diffs
+.status
 
 :javascript
   $(function(){
-    $("#gitlab-tabs").tabs();
+    MergeRequest.init();
   })
+
+= render "notes/per_line_form"
+
+:javascript
+  $(document).ready(function(){
+    $(".line_note_link, .line_note_reply_link").live("click", function(e) { 
+      var form = $(".per_line_form");
+      $(this).parent().parent().after(form);
+      form.find("#note_line_code").val($(this).attr("line_code"));
+      form.show();  
+      return false;
+    });
+  });

@@ -10,30 +10,28 @@ describe Project do
       @abilities << Ability
     end
 
-    describe :read do
+    describe "read access" do
       before do
-        @p1.users_projects.create(:project => @p1, :user => @u1, :read => false)
-        @p1.users_projects.create(:project => @p1, :user => @u2, :read => true)
+        @p1.users_projects.create(:project => @p1, :user => @u2, :project_access => UsersProject::REPORTER)
       end
 
       it { @abilities.allowed?(@u1, :read_project, @p1).should be_false }
       it { @abilities.allowed?(@u2, :read_project, @p1).should be_true }
     end
 
-    describe :write do
+    describe "write access" do
       before do
-        @p1.users_projects.create(:project => @p1, :user => @u1, :write => false)
-        @p1.users_projects.create(:project => @p1, :user => @u2, :write => true)
+        @p1.users_projects.create(:project => @p1, :user => @u2, :project_access => UsersProject::DEVELOPER)
       end
 
       it { @abilities.allowed?(@u1, :write_project, @p1).should be_false }
       it { @abilities.allowed?(@u2, :write_project, @p1).should be_true }
     end
 
-    describe :admin do
+    describe "admin access" do
       before do
-        @p1.users_projects.create(:project => @p1, :user => @u1, :admin => false)
-        @p1.users_projects.create(:project => @p1, :user => @u2, :admin => true)
+        @p1.users_projects.create(:project => @p1, :user => @u1, :project_access => UsersProject::DEVELOPER)
+        @p1.users_projects.create(:project => @p1, :user => @u2, :project_access => UsersProject::MASTER)
       end
 
       it { @abilities.allowed?(@u1, :admin_project, @p1).should be_false }

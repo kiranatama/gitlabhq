@@ -1,29 +1,26 @@
-%table 
-  %thead 
-    %th Files
-  - @commit.diffs.each do |diff|
-    %tr
-      %td
-        - if diff.deleted_file
-          %span.removed_file
-            %a{:href => "##{diff.a_path}"}
-              = diff.a_path
-              = image_tag "blueprint_delete.png"
-        - elsif diff.renamed_file
-          %span.moved_file
-            %a{:href => "##{diff.b_path}"}
-              = diff.a_path
-              = "->"
-              = diff.b_path
-              = image_tag "blueprint_notice.png"
-        - elsif diff.new_file
-          %span.new_file
-            %a{:href => "##{diff.b_path}"}
-              = diff.b_path
-              = image_tag "blueprint_add.png"
-        - else
-          %span.edit_file
-            %a{:href => "##{diff.b_path}"}
-              = diff.b_path
-              = image_tag "blueprint_info.png"
+%ul.bordered-list
+  - diffs.each do |diff|
+    %li
+      - if diff.deleted_file
+        %span.removed_file
+          %a{:href => "##{diff.old_path}"}
+            = diff.old_path
+            = image_tag "diff_file_delete.png"
+      - elsif diff.renamed_file
+        %span.moved_file
+          %a{:href => "##{diff.new_path}"}
+            = diff.old_path
+            = "->"
+            = diff.new_path
+            = image_tag "diff_file_notice.png"
+      - elsif diff.new_file
+        %span.new_file
+          %a{:href => "##{diff.new_path}"}
+            = diff.new_path
+            = image_tag "diff_file_add.png"
+      - else
+        %span.edit_file
+          %a{:href => "##{diff.new_path}"}
+            = diff.new_path
+            = image_tag "diff_file_info.png"
 
