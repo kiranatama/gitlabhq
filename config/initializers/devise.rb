@@ -199,6 +199,9 @@ Devise.setup do |config|
   # To configure a new OmniAuth provider copy and edit omniauth.rb.sample
   # selecting the provider you require.
   # Check the wiki for more information on setting up on your models
+  require 'openid/store/filesystem'
+
+  config.omniauth :open_id, :store => OpenID::Store::Filesystem.new('/tmp'), :name => 'google', :identifier => 'https://www.google.com/accounts/o8/id', :require => 'omniauth-openid'
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

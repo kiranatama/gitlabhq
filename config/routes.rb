@@ -11,15 +11,15 @@ Gitlab::Application.routes.draw do
   get 'help/web_hooks' => 'help#web_hooks'
 
   namespace :admin do
-    resources :users do 
-      member do 
+    resources :users do
+      member do
         put :team_update
         put :block
         put :unblock
       end
     end
-    resources :projects, :constraints => { :id => /[^\/]+/ } do 
-      member do 
+    resources :projects, :constraints => { :id => /[^\/]+/ } do
+      member do
         get :team
         put :team_update
       end
@@ -46,7 +46,13 @@ Gitlab::Application.routes.draw do
   resources :projects, :constraints => { :id => /[^\/]+/ }, :only => [:new, :create, :index]
   resources :keys
 
-  devise_for :users, :controllers => { :omniauth_callbacks => :omniauth_callbacks }
+  devise_for :users, :skip => :registrations, :controllers => { :omniauth_callbacks => "users/omniauth_callbacks" } do
+    resource :registration,
+      :only => [:edit, :update],
+      :path => 'users',
+      :controller => 'settings',
+      :as => :user_registration
+  end
 
   resources :projects, :constraints => { :id => /[^\/]+/ }, :except => [:new, :create, :index], :path => "/" do
     member do
@@ -58,12 +64,12 @@ Gitlab::Application.routes.draw do
 
     resources :wikis, :only => [:show, :edit, :destroy, :create] do
       member do
-        get "history"        
+        get "history"
       end
     end
 
-    resource :repository do 
-      member do 
+    resource :repository do
+      member do
         get "branches"
         get "tags"
         get "archive"
@@ -73,14 +79,14 @@ Gitlab::Application.routes.draw do
     resources :deploy_keys
     resources :protected_branches, :only => [:index, :create, :destroy]
 
-    resources :refs, :only => [], :path => "/" do 
-      collection do 
+    resources :refs, :only => [], :path => "/" do
+      collection do
         get "switch"
       end
 
-      member do 
+      member do
         get "tree", :constraints => { :id => /[a-zA-Z.\/0-9_\-]+/ }
-        get "blob", 
+        get "blob",
           :constraints => {
             :id => /[a-zA-Z.0-9\/_\-]+/,
             :path => /.*/
@@ -97,25 +103,25 @@ Gitlab::Application.routes.draw do
       end
     end
 
-    resources :merge_requests do 
-      member do 
+    resources :merge_requests do
+      member do
         get :diffs
       end
 
-      collection do 
+      collection do
         get :branch_from
         get :branch_to
       end
     end
-    
+
     resources :snippets
-    resources :hooks, :only => [:index, :new, :create, :destroy, :show] do 
-      member do 
+    resources :hooks, :only => [:index, :new, :create, :destroy, :show] do
+      member do
         get :test
       end
     end
-    resources :commits do 
-      collection do 
+    resources :commits do
+      collection do
         get :compare
       end
     end
